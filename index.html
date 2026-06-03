@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Centinela · Validación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3EDE2; --ink:#262219; --soft:#736B5B; --faint:#A89E8B; --line:#E2D9C8;
+    --line2:#D5C9B3; --surface:#FFFDF7; --copper:#B5532B; --copper-d:#984321;
+    --emerald:#3B7A4E; --emerald-bg:#E3EFE2; --brick:#AE382D; --brick-bg:#F6E0DB;
+    --amber:#BE861A; --amber-bg:#F6ECCE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Hanken Grotesk',system-ui,sans-serif; color:var(--ink);
+    background:
+      radial-gradient(900px 600px at 88% -8%, #FBEFDF 0%, rgba(251,239,223,0) 55%),
+      radial-gradient(700px 500px at -5% 105%, #EDE8DA 0%, rgba(237,232,218,0) 60%),
+      var(--bg);
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:860px; margin:0 auto; padding:36px 22px 70px; }
+  .display{ font-family:'Bricolage Grotesque',sans-serif; letter-spacing:-0.02em; }
+  .mono{ font-family:'Spline Sans Mono',monospace; font-variant-numeric:tabular-nums; }
+
+  header{ display:flex; align-items:center; gap:13px; margin-bottom:8px; }
+  .mark{ width:42px; height:42px; }
+  h1{ font-size:25px; font-weight:800; margin:0; }
+  .tagline{ font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--soft); }
+  .sub{ color:var(--soft); font-size:14.5px; margin:2px 0 26px; }
+
+  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:26px; }
+  .stat{ background:var(--surface); border:1px solid var(--line); border-radius:15px; padding:16px 18px;
+    box-shadow:0 1px 0 #fff inset, 0 6px 18px rgba(140,110,60,.05); }
+  .stat .k{ font-size:12px; color:var(--soft); font-weight:600; }
+  .stat .v{ font-size:27px; font-weight:800; margin-top:6px; line-height:1; }
+  .stat .v small{ font-size:14px; color:var(--faint); font-weight:700; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;
+    box-shadow:0 1px 0 #fff inset, 0 6px 20px rgba(140,110,60,.06); margin-bottom:22px; }
+  .card h2{ font-size:13px; text-transform:uppercase; letter-spacing:.12em; color:var(--soft);
+    font-weight:700; margin:0 0 4px; }
+
+  .note{ background:var(--amber-bg); border:1px solid #EBDCB0; border-radius:13px; padding:14px 16px;
+    font-size:13.5px; color:#7a5a13; margin-bottom:22px; line-height:1.5; }
+
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  label{ font-size:13px; font-weight:600; color:var(--soft); }
+  select, button{ font-family:inherit; font-size:13.5px; }
+  select{ padding:8px 11px; border-radius:10px; border:1px solid var(--line2); background:#FCFAF3; color:var(--ink); }
+  .btn{ padding:9px 15px; border-radius:10px; border:1px solid var(--copper-d); cursor:pointer; font-weight:700;
+    background:linear-gradient(180deg,#C25E33,var(--copper)); color:#fff; box-shadow:0 2px 8px rgba(150,67,33,.25); }
+  .btn:hover{ filter:brightness(1.05); }
+
+  table{ width:100%; border-collapse:collapse; font-size:14px; }
+  th{ text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--faint);
+    font-weight:700; padding:0 8px 9px; }
+  td{ padding:9px 8px; border-top:1px solid var(--line); }
+  .bar-cell{ width:46%; }
+  .bartrack{ position:relative; height:18px; background:#F0EADD; border-radius:6px; overflow:hidden; }
+  .barfill{ position:absolute; left:0; top:0; bottom:0; border-radius:6px; }
+  .goal{ position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--copper-d); opacity:.65; }
+  .pill{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:8px; }
+  .pill.ok{ background:var(--emerald-bg); color:var(--emerald); }
+  .pill.fail{ background:var(--brick-bg); color:var(--brick); }
+  .pill.part{ background:#ECE6DA; color:var(--soft); }
+  .min{ font-weight:700; }
+  .empty{ text-align:center; color:var(--soft); padding:30px 10px; font-size:14.5px; }
+  .foot{ font-size:12px; color:var(--faint); text-align:center; margin-top:20px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg class="mark" viewBox="0 0 40 40" fill="none">
+      <path d="M20 3l13 4v11c0 9-5.5 15-13 19C12.5 33 7 27 7 18V7l13-4z" fill="#BD5B2E" stroke="#984321" stroke-width="1.4"/>
+      <path d="M20 11v18M13 17l7 4 7-4" stroke="#FBEFDF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <h1 class="display">Centinela</h1>
+      <div class="tagline">Validación · datos reales</div>
+    </div>
+  </header>
+  <p class="sub" id="accLine">Cargando datos…</p>
+
+  <div class="note">
+    <b>Cómo validar:</b> la columna “Minutos” es lo que el sistema dedujo de tu tiempo total de Guild Wars 2.
+    Compárala con tu registro hecho a mano. Si coinciden, el método funciona. La línea cobre marca la meta de 1 hora.
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Tiempo total jugado</div><div class="v" id="sTotal">—</div></div>
+    <div class="stat"><div class="k">Fotos tomadas</div><div class="v" id="sSnaps">—</div></div>
+    <div class="stat"><div class="k">Última actualización</div><div class="v" id="sLast" style="font-size:18px">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <h2>Minutos por día</h2>
+        <div style="font-size:13px;color:var(--soft)">Calculado restando el tiempo total entre días.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label>Zona horaria</label>
+        <select id="tz">
+          <option value="-8">Los Ángeles · UTC−8</option>
+          <option value="-7">Tijuana · UTC−7</option>
+          <option value="-6" selected>Ciudad de México · UTC−6</option>
+          <option value="-5">Bogotá/NY · UTC−5</option>
+          <option value="-3">Buenos Aires · UTC−3</option>
+          <option value="0">Londres · UTC±0</option>
+          <option value="1">Londres(ver) · UTC+1</option>
+          <option value="2">Madrid · UTC+2</option>
+          <option value="8">Manila · UTC+8</option>
+          <option value="9">Tokio · UTC+9</option>
+        </select>
+        <button class="btn" id="reload">Actualizar</button>
+      </div>
+    </div>
+    <div id="content"></div>
+  </div>
+
+  <div class="foot">
+    Las fotos se toman cada hora, así que los cortes entre días pueden variar hasta ~1 hora.<br>
+    El primer día aparece como parcial porque no hay una foto previa que sirva de punto de partida.
+  </div>
+</div>
+
+<script>
+const DOW = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const fmtMin = (m) => { m = Math.round(m); if (m<=0) return "0m"; if (m<60) return m+"m";
+  const h=Math.floor(m/60), r=m%60; return r? h+"h "+r+"m" : h+"h"; };
+const fmtH = (s) => (s/3600).toFixed(1) + " h";
+
+function localKey(iso, off){
+  const d = new Date(new Date(iso).getTime() + off*3600000);
+  return { key:d.toISOString().slice(0,10), dow:d.getUTCDay(),
+           label:String(d.getUTCDate()).padStart(2,"0")+"/"+String(d.getUTCMonth()+1).padStart(2,"0") };
+}
+
+async function load(){
+  const off = Number(document.getElementById("tz").value);
+  const box = document.getElementById("content");
+  let snaps = [];
+  try{
+    const r = await fetch("./data/snapshots.json?v=" + Date.now());
+    snaps = await r.json();
+  }catch(e){ snaps = []; }
+
+  if(!Array.isArray(snaps) || snaps.length === 0){
+    document.getElementById("accLine").textContent = "Aún no hay datos.";
+    box.innerHTML = '<div class="empty">Todavía no se ha tomado ninguna foto.<br>'+
+      'Ejecuta el grabador a mano o espera a la primera hora en punto.</div>';
+    return;
+  }
+
+  snaps.sort((a,b)=> a.t < b.t ? -1 : 1);
+  const last = snaps[snaps.length-1];
+  document.getElementById("accLine").textContent = "Cuenta: " + (last.name||"—");
+  document.getElementById("sTotal").innerHTML = fmtH(last.age).replace(" h",'<small> h</small>');
+  document.getElementById("sSnaps").textContent = snaps.length;
+  document.getElementById("sLast").textContent =
+    new Date(last.t).toLocaleString("es-MX",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+
+  // age al final de cada día local (última foto de ese día)
+  const dayEnd = new Map();   // key -> {age, dow, label, firstAge}
+  for(const s of snaps){
+    const lk = localKey(s.t, off);
+    if(!dayEnd.has(lk.key)) dayEnd.set(lk.key, {age:s.age, dow:lk.dow, label:lk.label, firstAge:s.age});
+    const d = dayEnd.get(lk.key);
+    d.age = s.age;                       // se queda con la última del día
+    if(s.age < d.firstAge) d.firstAge = s.age;
+  }
+  const keys = [...dayEnd.keys()].sort();
+
+  const rows = [];
+  let prevAge = null;
+  keys.forEach((k, i) => {
+    const d = dayEnd.get(k);
+    let minutes, partial=false;
+    if(prevAge === null){ minutes = (d.age - d.firstAge)/60; partial = true; }
+    else { minutes = (d.age - prevAge)/60; }
+    prevAge = d.age;
+    const today = (i === keys.length-1);
+    rows.push({ k, dow:d.dow, label:d.label, minutes, partial, today });
+  });
+
+  const maxBar = 180;
+  box.innerHTML =
+    '<table><thead><tr><th>Día</th><th class="bar-cell">Tiempo jugado</th><th>Minutos</th><th>Estado</th></tr></thead><tbody>'+
+    rows.slice().reverse().map(r=>{
+      const w = Math.min(100, (r.minutes/maxBar)*100);
+      const ok = r.minutes >= 60;
+      const color = r.partial ? "#C9BBA0" : ok ? "var(--emerald)" : "var(--brick)";
+      const goalLeft = (60/maxBar)*100;
+      const pill = r.partial ? '<span class="pill part">parcial</span>'
+        : r.today ? (ok? '<span class="pill ok">✓ hoy</span>' : '<span class="pill part">en curso</span>')
+        : ok ? '<span class="pill ok">✓ cumplió</span>' : '<span class="pill fail">✗ &lt; 1h</span>';
+      return '<tr><td><b>'+DOW[r.dow]+'</b> <span style="color:var(--faint)">'+r.label+'</span></td>'+
+        '<td class="bar-cell"><div class="bartrack"><div class="barfill" style="width:'+w+'%;background:'+color+'"></div>'+
+        '<div class="goal" style="left:'+goalLeft+'%"></div></div></td>'+
+        '<td class="min mono">'+fmtMin(r.minutes)+'</td><td>'+pill+'</td></tr>';
+    }).join("")+'</tbody></table>';
+}
+
+document.getElementById("reload").addEventListener("click", load);
+document.getElementById("tz").addEventListener("change", load);
+load();
+</script>
+</body>
+</html>
