@@ -1,0 +1,26 @@
+name: Grabar tiempo de juego
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Tomar la foto
+        env:
+          GW2_API_KEY: ${{ secrets.GW2_API_KEY }}
+        run: node record.mjs
+      - name: Guardar la foto
+        run: |
+          git config user.name "centinela-bot"
+          git config user.email "centinela-bot@users.noreply.github.com"
+          git add data/snapshots.json
+          git commit -m "snapshot" || echo "sin cambios"
+          git push
