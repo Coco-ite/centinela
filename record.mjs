@@ -11,10 +11,10 @@ async function getAccount() {
       if (res.ok) return await res.json();
       last = "HTTP " + res.status;
     } catch (e) { last = String(e); }
-    console.log(`Intento ${i} falló (${last}); reintento...`);
+    console.log(`Intento ${i} fallo (${last}); reintento...`);
     await new Promise(r => setTimeout(r, 4000 * i));
   }
-  throw new Error("La API no respondió tras varios intentos: " + last);
+  throw new Error("La API no respondio tras varios intentos: " + last);
 }
 
 const acc = await getAccount();
