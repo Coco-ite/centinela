@@ -3,30 +3,16 @@ on:
   schedule:
     - cron: "*/30 * * * *"
   workflow_dispatch:
-permissions:
-  contents: write
-concurrency:
-  group: grabar
-  cancel-in-progress: false
 jobs:
   record:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Tomar la foto
+      - name: Grabar en Supabase
         env:
-          GW2_API_KEY: ${{ secrets.GW2_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: node record.mjs
-      - name: Guardar la foto
-        run: |
-          git config user.name "centinela-bot"
-          git config user.email "centinela-bot@users.noreply.github.com"
-          git add data/snapshots.json
-          git commit -m "snapshot $(date -u +%FT%TZ)" || exit 0
-          git pull --rebase origin main
-          git push
