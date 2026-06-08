@@ -1,215 +1,361 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Centinela · Validación</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Centinela</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#F3EDE2; --ink:#262219; --soft:#736B5B; --faint:#A89E8B; --line:#E2D9C8;
-    --line2:#D5C9B3; --surface:#FFFDF7; --copper:#B5532B; --copper-d:#984321;
-    --emerald:#3B7A4E; --emerald-bg:#E3EFE2; --brick:#AE382D; --brick-bg:#F6E0DB;
-    --amber:#BE861A; --amber-bg:#F6ECCE;
+    --parchment:#F3EDE2; --card:#FBF8F2; --ink:#26231D; --soft:#6B6457;
+    --copper:#B5532B; --copper-d:#984321; --emerald:#3B7A4E; --brick:#AE382D;
+    --amber:#C98A2B; --line:#E2D8C8; --muted:#EDE6D8;
   }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; font-family:'Hanken Grotesk',system-ui,sans-serif; color:var(--ink);
-    background:
-      radial-gradient(900px 600px at 88% -8%, #FBEFDF 0%, rgba(251,239,223,0) 55%),
-      radial-gradient(700px 500px at -5% 105%, #EDE8DA 0%, rgba(237,232,218,0) 60%),
-      var(--bg);
-    min-height:100vh; -webkit-font-smoothing:antialiased;
-  }
-  .wrap{ max-width:860px; margin:0 auto; padding:36px 22px 70px; }
-  .display{ font-family:'Bricolage Grotesque',sans-serif; letter-spacing:-0.02em; }
-  .mono{ font-family:'Spline Sans Mono',monospace; font-variant-numeric:tabular-nums; }
-
-  header{ display:flex; align-items:center; gap:13px; margin-bottom:8px; }
-  .mark{ width:42px; height:42px; }
-  h1{ font-size:25px; font-weight:800; margin:0; }
-  .tagline{ font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--soft); }
-  .sub{ color:var(--soft); font-size:14.5px; margin:2px 0 26px; }
-
-  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:26px; }
-  .stat{ background:var(--surface); border:1px solid var(--line); border-radius:15px; padding:16px 18px;
-    box-shadow:0 1px 0 #fff inset, 0 6px 18px rgba(140,110,60,.05); }
-  .stat .k{ font-size:12px; color:var(--soft); font-weight:600; }
-  .stat .v{ font-size:27px; font-weight:800; margin-top:6px; line-height:1; }
-  .stat .v small{ font-size:14px; color:var(--faint); font-weight:700; }
-
-  .card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;
-    box-shadow:0 1px 0 #fff inset, 0 6px 20px rgba(140,110,60,.06); margin-bottom:22px; }
-  .card h2{ font-size:13px; text-transform:uppercase; letter-spacing:.12em; color:var(--soft);
-    font-weight:700; margin:0 0 4px; }
-
-  .note{ background:var(--amber-bg); border:1px solid #EBDCB0; border-radius:13px; padding:14px 16px;
-    font-size:13.5px; color:#7a5a13; margin-bottom:22px; line-height:1.5; }
-
-  .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-  label{ font-size:13px; font-weight:600; color:var(--soft); }
-  select, button{ font-family:inherit; font-size:13.5px; }
-  select{ padding:8px 11px; border-radius:10px; border:1px solid var(--line2); background:#FCFAF3; color:var(--ink); }
-  .btn{ padding:9px 15px; border-radius:10px; border:1px solid var(--copper-d); cursor:pointer; font-weight:700;
-    background:linear-gradient(180deg,#C25E33,var(--copper)); color:#fff; box-shadow:0 2px 8px rgba(150,67,33,.25); }
-  .btn:hover{ filter:brightness(1.05); }
-
-  table{ width:100%; border-collapse:collapse; font-size:14px; }
-  th{ text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--faint);
-    font-weight:700; padding:0 8px 9px; }
-  td{ padding:9px 8px; border-top:1px solid var(--line); }
-  .bar-cell{ width:46%; }
-  .bartrack{ position:relative; height:18px; background:#F0EADD; border-radius:6px; overflow:hidden; }
-  .barfill{ position:absolute; left:0; top:0; bottom:0; border-radius:6px; }
-  .goal{ position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--copper-d); opacity:.65; }
-  .pill{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:8px; }
-  .pill.ok{ background:var(--emerald-bg); color:var(--emerald); }
-  .pill.fail{ background:var(--brick-bg); color:var(--brick); }
-  .pill.part{ background:#ECE6DA; color:var(--soft); }
-  .min{ font-weight:700; }
-  .empty{ text-align:center; color:var(--soft); padding:30px 10px; font-size:14.5px; }
-  .foot{ font-size:12px; color:var(--faint); text-align:center; margin-top:20px; line-height:1.6; }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--parchment);color:var(--ink);font-family:"Hanken Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;margin:0}
+  .mono{font-family:"Spline Sans Mono",monospace}
+  a{color:var(--copper)}
+  .wrap{max-width:980px;margin:0 auto;padding:22px 18px 60px}
+  .center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+  /* header */
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .top .logo{width:42px;height:42px;flex:none}
+  .top h1{font-size:26px;letter-spacing:-.01em}
+  .top .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft)}
+  .userbar{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--soft)}
+  .nav{display:flex;gap:6px;margin:18px 0 16px;border-bottom:1px solid var(--line)}
+  .nav button{background:none;border:0;padding:9px 4px;margin-right:14px;font:inherit;font-weight:600;color:var(--soft);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .nav button.active{color:var(--ink);border-color:var(--copper)}
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--copper);color:#fff;border:0;border-radius:9px;padding:9px 15px;font:inherit;font-weight:600;cursor:pointer}
+  .btn:hover{background:var(--copper-d)}
+  .btn:disabled{opacity:.55;cursor:default}
+  .btn.ghost{background:transparent;color:var(--soft);border:1px solid var(--line)}
+  .btn.ghost:hover{background:var(--muted);color:var(--ink)}
+  .btn.sm{padding:5px 10px;font-size:13px;border-radius:7px}
+  .btn.danger{background:transparent;color:var(--brick);border:1px solid #E6C4bf}
+  .btn.danger:hover{background:#FBEEEC}
+  /* cards & inputs */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--soft);margin:0 0 4px}
+  input,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;font:inherit;color:var(--ink)}
+  input:focus,select:focus{outline:none;border-color:var(--copper)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field{margin-bottom:12px}
+  .note{font-size:12px;color:var(--soft)}
+  .err{color:var(--brick);font-size:13px;margin-top:6px}
+  .ok{color:var(--emerald);font-size:13px;margin-top:6px}
+  /* player card */
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+  .prow{display:flex;align-items:center;gap:12px}
+  .pname{font-family:"Bricolage Grotesque";font-weight:700;font-size:17px}
+  .pacct{font-size:12px;color:var(--soft)}
+  .summary{margin-left:auto;text-align:right;font-size:13px;color:var(--soft)}
+  .summary b{font-family:"Bricolage Grotesque";font-size:18px;color:var(--ink);display:block}
+  .chips{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .chip{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;border:1px solid var(--line);color:var(--soft);background:#fff;white-space:nowrap}
+  .chip .d{opacity:.7;margin-right:3px}
+  .chip.ok{background:#EAF3EC;border-color:#CDE5D3;color:var(--emerald)}
+  .chip.no{background:#FBEEEC;border-color:#EFCFCB;color:var(--brick)}
+  .chip.cur{background:#FBF1DF;border-color:#EAD7AE;color:var(--amber)}
+  .chip.rest{background:var(--muted);border-color:var(--line);color:var(--soft)}
+  .chip.next{opacity:.6}
+  .detail{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;display:none}
+  .detail.open{display:block}
+  .drow{display:grid;grid-template-columns:64px 1fr 64px 96px;gap:10px;align-items:center;padding:5px 0;font-size:13px}
+  .drow .day{font-weight:600}
+  .drow .day small{display:block;color:var(--soft);font-weight:400}
+  .bar{height:9px;border-radius:6px;background:var(--muted);position:relative;overflow:hidden}
+  .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;display:block}
+  .bar .goal{position:absolute;right:0;top:-2px;bottom:-2px;width:2px;background:var(--copper);opacity:.5}
+  .mins{text-align:right;font-family:"Spline Sans Mono";font-size:12px}
+  .badge{font-size:11px;font-weight:700;text-align:center;padding:3px 0;border-radius:6px}
+  .badge.ok{background:#EAF3EC;color:var(--emerald)} .badge.no{background:#FBEEEC;color:var(--brick)}
+  .badge.cur{background:#FBF1DF;color:var(--amber)} .badge.rest{background:var(--muted);color:var(--soft)}
+  .badge.next{background:#fff;color:var(--soft);border:1px solid var(--line)}
+  .badge.part{background:var(--muted);color:var(--soft)}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);font-weight:600;padding:8px 8px;border-bottom:1px solid var(--line)}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr.off td{opacity:.5}
+  .pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+  .pill.on{background:#EAF3EC;color:var(--emerald)} .pill.off{background:var(--muted);color:var(--soft)}
+  .empty{color:var(--soft);text-align:center;padding:34px 10px}
+  .spin{color:var(--soft);text-align:center;padding:30px}
+  .loginbox{width:100%;max-width:380px}
+  select.wsmini{width:auto;padding:4px 8px;font-size:13px;border-radius:7px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <svg class="mark" viewBox="0 0 40 40" fill="none">
-      <path d="M20 3l13 4v11c0 9-5.5 15-13 19C12.5 33 7 27 7 18V7l13-4z" fill="#BD5B2E" stroke="#984321" stroke-width="1.4"/>
-      <path d="M20 11v18M13 17l7 4 7-4" stroke="#FBEFDF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <div>
-      <h1 class="display">Centinela</h1>
-      <div class="tagline">Validación · datos reales</div>
-    </div>
-  </header>
-  <p class="sub" id="accLine">Cargando datos…</p>
+<div id="app"><div class="spin">Cargando…</div></div>
 
-  <div class="note">
-    <b>Cómo validar:</b> la columna “Minutos” es lo que el sistema dedujo de tu tiempo total de Guild Wars 2.
-    Compárala con tu registro hecho a mano. Si coinciden, el método funciona. La línea cobre marca la meta de 1 hora.
-  </div>
-
-  <div class="stats">
-    <div class="stat"><div class="k">Tiempo total jugado</div><div class="v" id="sTotal">—</div></div>
-    <div class="stat"><div class="k">Fotos tomadas</div><div class="v" id="sSnaps">—</div></div>
-    <div class="stat"><div class="k">Última actualización</div><div class="v" id="sLast" style="font-size:18px">—</div></div>
-  </div>
-
-  <div class="card">
-    <div class="row">
-      <div>
-        <h2>Minutos por día</h2>
-        <div style="font-size:13px;color:var(--soft)">Calculado restando el tiempo total entre días.</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <label>Zona horaria</label>
-        <select id="tz">
-          <option value="-8">Los Ángeles · UTC−8</option>
-          <option value="-7">Tijuana · UTC−7</option>
-          <option value="-6" selected>Ciudad de México · UTC−6</option>
-          <option value="-5">Bogotá/NY · UTC−5</option>
-          <option value="-3">Buenos Aires · UTC−3</option>
-          <option value="0">Londres · UTC±0</option>
-          <option value="1">Londres(ver) · UTC+1</option>
-          <option value="2">Madrid · UTC+2</option>
-          <option value="8">Manila · UTC+8</option>
-          <option value="9">Tokio · UTC+9</option>
-        </select>
-        <button class="btn" id="reload">Actualizar</button>
-      </div>
-    </div>
-    <div id="content"></div>
-  </div>
-
-  <div class="foot">
-    Las fotos se toman cada hora, así que los cortes entre días pueden variar hasta ~1 hora.<br>
-    El primer día aparece como parcial porque no hay una foto previa que sirva de punto de partida.
-  </div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const DOW = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-const fmtMin = (m) => { m = Math.round(m); if (m<=0) return "0m"; if (m<60) return m+"m";
-  const h=Math.floor(m/60), r=m%60; return r? h+"h "+r+"m" : h+"h"; };
-const fmtH = (s) => (s/3600).toFixed(1) + " h";
+const SUPABASE_URL = "https://erlqmyoltbroexeexvic.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybHFteW9sdGJyb2V4ZWV4dmljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4ODE1OTgsImV4cCI6MjA5NjQ1NzU5OH0.lZLAC6RQlmzdukQRltvn9K2eaxYJ-tADNIGKAy_nbAI";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-function localKey(iso, off){
-  const d = new Date(new Date(iso).getTime() + off*3600000);
-  return { key:d.toISOString().slice(0,10), dow:d.getUTCDay(),
-           label:String(d.getUTCDate()).padStart(2,"0")+"/"+String(d.getUTCMonth()+1).padStart(2,"0") };
+const DAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const TZS = [
+  [-8,"UTC−8 · Los Ángeles"],[-7,"UTC−7 · Denver"],[-6,"UTC−6 · Ciudad de México"],
+  [-5,"UTC−5 · Nueva York / Bogotá"],[-4,"UTC−4 · Santiago"],[-3,"UTC−3 · Buenos Aires"],
+  [0,"UTC±0 · Londres"],[1,"UTC+1 · Madrid"],[2,"UTC+2 · Atenas"]
+];
+
+let state = { session:null, view:"resumen", players:[], schedules:[], snaps:[],
+              loading:true, open:{}, addMsg:null, lastSync:null };
+
+/* ---------- helpers de fechas ---------- */
+const pad = n => String(n).padStart(2,"0");
+function localDate(ms, off){ const d=new Date(ms+off*3600e3); return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate()); }
+function addDays(s,n){ const d=new Date(s+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+function dow(s){ return new Date(s+"T00:00:00Z").getUTCDay(); }
+function ddmm(s){ const [y,m,d]=s.split("-"); return d+"/"+m; }
+function todayLocal(off){ return localDate(Date.now(), off); }
+function weekStartOf(s, ws){ let d=new Date(s+"T00:00:00Z"); while(d.getUTCDay()!==ws) d.setUTCDate(d.getUTCDate()-1); return d.toISOString().slice(0,10); }
+function isWorking(s, ws){ return ((dow(s)-ws+7)%7) < 5; }
+function wsForPlayer(p, dateStr){
+  const sc = state.schedules.filter(x=>x.player_id===p.id && x.effective_from<=dateStr)
+                 .sort((a,b)=> a.effective_from<b.effective_from?1:-1);
+  return sc.length ? sc[0].week_start_day : p.week_start_day;
 }
 
-async function load(){
-  const off = Number(document.getElementById("tz").value);
-  const box = document.getElementById("content");
-  let snaps = [];
+/* ages por día local de un jugador */
+function dayAges(p){
+  const arr = state.snaps.filter(s=>s.player_id===p.id)
+      .map(s=>({t:Date.parse(s.captured_at), age:s.age_seconds})).sort((a,b)=>a.t-b.t);
+  const byDate={};
+  for(const s of arr){ byDate[localDate(s.t, p.tz_offset)] = s.age; }
+  const dates = Object.keys(byDate).sort();
+  return {byDate, dates};
+}
+function endAge(da, dateStr){ let r=null; for(const d of da.dates){ if(d<=dateStr) r=da.byDate[d]; else break; } return r; }
+function minutesFor(da, dateStr){
+  const end=endAge(da,dateStr), prev=endAge(da, addDays(dateStr,-1));
+  if(end==null || prev==null) return {min:null, partial:true};
+  return {min: Math.max(0,(end-prev)/60), partial:false};
+}
+function statusFor(p, da, dateStr){
+  const ws=wsForPlayer(p,dateStr), today=todayLocal(p.tz_offset);
+  if(dateStr>today) return {k:"next", label:"próximo", min:null, working:isWorking(dateStr,ws)};
+  const working=isWorking(dateStr,ws);
+  const {min,partial}=minutesFor(da,dateStr);
+  if(!working) return {k:"rest", label:"descanso", min, working};
+  if(partial) return {k:"part", label:"parcial", min:null, working};
+  if(min>=60) return {k:"ok", label:"cumplió", min, working};
+  if(dateStr===today) return {k:"cur", label:"en curso", min, working};
+  return {k:"no", label:"no cumplió", min, working};
+}
+
+/* ---------- carga de datos ---------- */
+async function loadAll(){
+  state.loading=true; render();
+  const since = new Date(Date.now()-28*864e5).toISOString();
+  const [pr, sc, sn] = await Promise.all([
+    sb.from("players").select("*").order("friendly_name"),
+    sb.from("schedules").select("*"),
+    sb.from("snapshots").select("player_id,captured_at,age_seconds").gte("captured_at", since)
+  ]);
+  state.players = pr.data||[]; state.schedules = sc.data||[]; state.snaps = sn.data||[];
+  state.loading=false; state.lastSync=new Date();
+  render();
+}
+
+/* ---------- acciones ---------- */
+async function login(){
+  const email=document.getElementById("email").value.trim();
+  const pass=document.getElementById("pass").value;
+  const box=document.getElementById("loginerr"); box.textContent="";
+  const {error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error) box.textContent = "No se pudo entrar: revisa correo y contraseña.";
+}
+async function logout(){ await sb.auth.signOut(); }
+
+async function validateKey(key){
   try{
-    const r = await fetch("./data/snapshots.json?v=" + Date.now());
-    snaps = await r.json();
-  }catch(e){ snaps = []; }
-
-  if(!Array.isArray(snaps) || snaps.length === 0){
-    document.getElementById("accLine").textContent = "Aún no hay datos.";
-    box.innerHTML = '<div class="empty">Todavía no se ha tomado ninguna foto.<br>'+
-      'Ejecuta el grabador a mano o espera a la primera hora en punto.</div>';
-    return;
-  }
-
-  snaps.sort((a,b)=> a.t < b.t ? -1 : 1);
-  const last = snaps[snaps.length-1];
-  document.getElementById("accLine").textContent = "Cuenta: " + (last.name||"—");
-  document.getElementById("sTotal").innerHTML = fmtH(last.age).replace(" h",'<small> h</small>');
-  document.getElementById("sSnaps").textContent = snaps.length;
-  document.getElementById("sLast").textContent =
-    new Date(last.t).toLocaleString("es-MX",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-
-  // age al final de cada día local (última foto de ese día)
-  const dayEnd = new Map();   // key -> {age, dow, label, firstAge}
-  for(const s of snaps){
-    const lk = localKey(s.t, off);
-    if(!dayEnd.has(lk.key)) dayEnd.set(lk.key, {age:s.age, dow:lk.dow, label:lk.label, firstAge:s.age});
-    const d = dayEnd.get(lk.key);
-    d.age = s.age;                       // se queda con la última del día
-    if(s.age < d.firstAge) d.firstAge = s.age;
-  }
-  const keys = [...dayEnd.keys()].sort();
-
-  const rows = [];
-  let prevAge = null;
-  keys.forEach((k, i) => {
-    const d = dayEnd.get(k);
-    let minutes, partial=false;
-    if(prevAge === null){ minutes = (d.age - d.firstAge)/60; partial = true; }
-    else { minutes = (d.age - prevAge)/60; }
-    prevAge = d.age;
-    const today = (i === keys.length-1);
-    rows.push({ k, dow:d.dow, label:d.label, minutes, partial, today });
-  });
-
-  const maxBar = 180;
-  box.innerHTML =
-    '<table><thead><tr><th>Día</th><th class="bar-cell">Tiempo jugado</th><th>Minutos</th><th>Estado</th></tr></thead><tbody>'+
-    rows.slice().reverse().map(r=>{
-      const w = Math.min(100, (r.minutes/maxBar)*100);
-      const ok = r.minutes >= 60;
-      const color = r.partial ? "#C9BBA0" : ok ? "var(--emerald)" : "var(--brick)";
-      const goalLeft = (60/maxBar)*100;
-      const pill = r.partial ? '<span class="pill part">parcial</span>'
-        : r.today ? (ok? '<span class="pill ok">✓ hoy</span>' : '<span class="pill part">en curso</span>')
-        : ok ? '<span class="pill ok">✓ cumplió</span>' : '<span class="pill fail">✗ &lt; 1h</span>';
-      return '<tr><td><b>'+DOW[r.dow]+'</b> <span style="color:var(--faint)">'+r.label+'</span></td>'+
-        '<td class="bar-cell"><div class="bartrack"><div class="barfill" style="width:'+w+'%;background:'+color+'"></div>'+
-        '<div class="goal" style="left:'+goalLeft+'%"></div></div></td>'+
-        '<td class="min mono">'+fmtMin(r.minutes)+'</td><td>'+pill+'</td></tr>';
-    }).join("")+'</tbody></table>';
+    const r=await fetch("https://api.guildwars2.com/v2/account?access_token="+encodeURIComponent(key));
+    if(r.status===200){ const a=await r.json(); return {ok:true,name:a.name,age:a.age}; }
+    if(r.status===401||r.status===403) return {ok:false,error:'La clave no es válida o le falta el permiso "account".'};
+    return {ok:false,error:"No se pudo verificar la clave ahora mismo. Intenta otra vez."};
+  }catch(e){ return {ok:false,error:"Error de conexión al verificar la clave."}; }
 }
 
-document.getElementById("reload").addEventListener("click", load);
-document.getElementById("tz").addEventListener("change", load);
-load();
+async function addPlayer(){
+  const name=v("f_name").trim(), key=v("f_key").trim();
+  const off=parseInt(v("f_tz")), ws=parseInt(v("f_ws"));
+  const tzLabel=(TZS.find(t=>t[0]===off)||[off,"UTC"+off])[1].split(" · ")[1]||"";
+  const btn=document.getElementById("addbtn");
+  if(!name||!key){ setAddMsg("Completa el nombre y la clave.",true); return; }
+  btn.disabled=true; setAddMsg("Validando la clave con Guild Wars 2…",false);
+  const val_=await validateKey(key);
+  if(!val_.ok){ setAddMsg(val_.error,true); btn.disabled=false; return; }
+  const masked = key.slice(0,4)+"····"+key.slice(-4);
+  const {data:p,error:e1}=await sb.from("players").insert(
+     {friendly_name:name,account_name:val_.name,tz_city:tzLabel,tz_offset:off,week_start_day:ws,active:true}).select().single();
+  if(e1){ setAddMsg("Error al guardar el jugador: "+e1.message,true); btn.disabled=false; return; }
+  const {error:e2}=await sb.from("player_keys").insert({player_id:p.id,api_key:key,key_masked:masked});
+  if(e2){ setAddMsg("Jugador creado, pero falló guardar la clave: "+e2.message,true); btn.disabled=false; await loadAll(); return; }
+  await sb.from("schedules").insert({player_id:p.id,week_start_day:ws,effective_from:todayLocal(off)});
+  btn.disabled=false;
+  state.addMsg={text:"✓ "+name+" ("+val_.name+") añadido. El grabador empezará a tomar fotos pronto.",err:false};
+  await loadAll();
+}
+async function toggleActive(id,cur){ await sb.from("players").update({active:!cur}).eq("id",id); await loadAll(); }
+async function delPlayer(id,name){
+  if(!confirm("¿Eliminar a "+name+"? Se borrarán su clave y su historial. Esto no se puede deshacer."))return;
+  await sb.from("players").delete().eq("id",id); await loadAll();
+}
+async function changeWs(id,ws){
+  const p=state.players.find(x=>x.id===id);
+  await sb.from("players").update({week_start_day:parseInt(ws)}).eq("id",id);
+  await sb.from("schedules").insert({player_id:id,week_start_day:parseInt(ws),effective_from:todayLocal(p.tz_offset)});
+  await loadAll();
+}
+function v(id){ return document.getElementById(id).value; }
+function setAddMsg(t,err){ const e=document.getElementById("addmsg"); if(e){ e.textContent=t; e.className=err?"err":"note"; } }
+function setView(x){ state.view=x; state.addMsg=null; render(); }
+function toggleOpen(id){ state.open[id]=!state.open[id]; render(); }
+
+/* ---------- vistas ---------- */
+const LOGO = '<svg class="logo" viewBox="0 0 48 48" fill="none"><path d="M24 4l16 6v11c0 11-7 18-16 23-9-5-16-12-16-23V10l16-6z" fill="#B5532B"/><path d="M24 13v22M15 21l9-8 9 8" stroke="#F3EDE2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function render(){
+  const app=document.getElementById("app");
+  if(!state.session){ app.innerHTML=loginView(); return; }
+  app.innerHTML =
+    '<div class="wrap">'+
+      '<div class="top">'+LOGO+
+        '<div><div class="eyebrow">Centinela</div><h1>Seguimiento del equipo</h1></div>'+
+        '<div class="userbar"><span>'+esc(state.session.user.email)+'</span>'+
+          '<button class="btn ghost sm" onclick="loadAll()">Actualizar</button>'+
+          '<button class="btn ghost sm" onclick="logout()">Salir</button></div>'+
+      '</div>'+
+      '<div class="nav">'+
+        '<button class="'+(state.view==="resumen"?"active":"")+'" onclick="setView(\'resumen\')">Resumen</button>'+
+        '<button class="'+(state.view==="admin"?"active":"")+'" onclick="setView(\'admin\')">Administración</button>'+
+      '</div>'+
+      (state.view==="resumen"? resumenView() : adminView())+
+    '</div>';
+}
+
+function loginView(){
+  return '<div class="center"><div class="loginbox">'+
+    '<div style="text-align:center;margin-bottom:18px">'+LOGO+
+      '<div class="eyebrow" style="margin-top:8px">Centinela</div>'+
+      '<h1 style="font-size:24px">Iniciar sesión</h1></div>'+
+    '<div class="card">'+
+      '<div class="field"><label>Correo</label><input id="email" type="email" autocomplete="username"></div>'+
+      '<div class="field"><label>Contraseña</label><input id="pass" type="password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')login()"></div>'+
+      '<button class="btn" style="width:100%;justify-content:center" onclick="login()">Entrar</button>'+
+      '<div id="loginerr" class="err"></div>'+
+    '</div>'+
+    '<p class="note" style="text-align:center">Acceso solo para administradores.</p>'+
+  '</div></div>';
+}
+
+function resumenView(){
+  if(state.loading) return '<div class="spin">Cargando datos…</div>';
+  const active=state.players.filter(p=>p.active);
+  if(!active.length) return '<div class="card"><div class="empty">Aún no hay jugadores. Ve a <b>Administración</b> para añadir el primero.</div></div>';
+  let html="";
+  for(const p of active) html += playerCard(p);
+  const sync = state.lastSync? '<p class="note" style="margin-top:4px">Actualizado '+state.lastSync.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})+'. Las fotos se toman cada ~30 min.</p>':"";
+  return html+sync;
+}
+
+function playerCard(p){
+  const today=todayLocal(p.tz_offset);
+  const ws=wsForPlayer(p,today);
+  const start=weekStartOf(today,ws);
+  const da=dayAges(p);
+  const work=[0,1,2,3,4].map(i=>addDays(start,i));
+  let met=0, relevant=0;
+  const chips=work.map(d=>{
+    const st=statusFor(p,da,d);
+    if(d<=today){ relevant++; if(st.k==="ok") met++; }
+    return '<span class="chip '+(st.k==="ok"?"ok":st.k==="no"?"no":st.k==="cur"?"cur":st.k==="next"?"next":"")+'">'+
+           '<span class="d">'+DAYS[dow(d)]+'</span>'+(st.min!=null?fmt(st.min):"·")+'</span>';
+  }).join("");
+  const open=!!state.open[p.id];
+  return '<div class="pcard">'+
+    '<div class="prow">'+
+      '<div><div class="pname">'+esc(p.friendly_name)+'</div>'+
+           '<div class="pacct">'+esc(p.account_name||"—")+' · '+esc(p.tz_city||("UTC"+p.tz_offset))+'</div></div>'+
+      '<div class="summary"><b>'+met+'/5</b>días cumplidos</div>'+
+    '</div>'+
+    '<div class="chips">'+chips+'</div>'+
+    '<div style="margin-top:10px"><button class="btn ghost sm" onclick="toggleOpen(\''+p.id+'\')">'+(open?"Ocultar detalle":"Ver detalle de la semana")+'</button></div>'+
+    '<div class="detail'+(open?" open":"")+'">'+(open?weekDetail(p,da,start,today):"")+'</div>'+
+  '</div>';
+}
+
+function weekDetail(p,da,start,today){
+  let rows="";
+  for(let i=0;i<7;i++){
+    const d=addDays(start,i);
+    const st=statusFor(p,da,d);
+    const fill = st.min!=null? Math.min(100, st.min/60*100):0;
+    const color = st.k==="ok"?"var(--emerald)":st.k==="no"?"var(--brick)":st.k==="cur"?"var(--amber)":"var(--soft)";
+    rows += '<div class="drow">'+
+      '<div class="day">'+DAYS[dow(d)]+'<small>'+ddmm(d)+'</small></div>'+
+      '<div class="bar"><i style="width:'+fill+'%;background:'+(st.working?color:"var(--line)")+'"></i><span class="goal"></span></div>'+
+      '<div class="mins">'+(st.min!=null?fmt(st.min):"—")+'</div>'+
+      '<div class="badge '+st.k+'">'+st.label+'</div>'+
+    '</div>';
+  }
+  return rows+'<p class="note" style="margin-top:8px">La línea cobre marca la meta de 1 hora. Los días de descanso no exigen tiempo.</p>';
+}
+
+function adminView(){
+  const tzOpts=TZS.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join("");
+  const wsOpts=DAYS.map((d,i)=>'<option value="'+i+'">'+d+'</option>').join("");
+  let form='<div class="card"><h3 style="margin-bottom:12px">Añadir jugador</h3>'+
+    '<div class="grid2">'+
+      '<div class="field"><label>Nombre para mostrar</label><input id="f_name" placeholder="Ej. Aria"></div>'+
+      '<div class="field"><label>Cuenta / clave API de GW2</label><input id="f_key" placeholder="Pega aquí la clave"></div>'+
+    '</div>'+
+    '<div class="grid2">'+
+      '<div class="field"><label>Zona horaria</label><select id="f_tz">'+tzOpts+'</select></div>'+
+      '<div class="field"><label>Primer día laboral de la semana</label><select id="f_ws">'+wsOpts+'</select></div>'+
+    '</div>'+
+    '<button id="addbtn" class="btn" onclick="addPlayer()">Validar y añadir</button>'+
+    '<div id="addmsg" class="note" style="margin-top:8px"></div>'+
+    '<p class="note" style="margin-top:6px">La clave se valida con Guild Wars 2 y se guarda de forma segura: queda escondida y nadie puede volver a leerla desde aquí.</p>'+
+  '</div>';
+  if(state.addMsg){ form='<div class="card"><div class="'+(state.addMsg.err?"err":"ok")+'">'+esc(state.addMsg.text)+'</div></div>'+form; }
+
+  let rows="";
+  for(const p of state.players){
+    const wsSel=DAYS.map((d,i)=>'<option value="'+i+'"'+(i===p.week_start_day?" selected":"")+'>'+d+'</option>').join("");
+    rows+='<tr class="'+(p.active?"":"off")+'">'+
+      '<td><b>'+esc(p.friendly_name)+'</b><div class="pacct">'+esc(p.account_name||"—")+'</div></td>'+
+      '<td>'+esc(p.tz_city||("UTC"+p.tz_offset))+'</td>'+
+      '<td><select class="wsmini" onchange="changeWs(\''+p.id+'\',this.value)">'+wsSel+'</select></td>'+
+      '<td><span class="pill '+(p.active?"on":"off")+'">'+(p.active?"activo":"inactivo")+'</span></td>'+
+      '<td style="text-align:right;white-space:nowrap">'+
+        '<button class="btn ghost sm" onclick="toggleActive(\''+p.id+'\','+p.active+')">'+(p.active?"Pausar":"Reactivar")+'</button> '+
+        '<button class="btn danger sm" onclick="delPlayer(\''+p.id+'\',\''+esc(p.friendly_name).replace(/'/g,"")+'\')">Eliminar</button>'+
+      '</td></tr>';
+  }
+  const table = state.players.length?
+    '<div class="card"><h3 style="margin-bottom:10px">Jugadores</h3><table>'+
+    '<thead><tr><th>Jugador</th><th>Zona</th><th>Inicio semana</th><th>Estado</th><th></th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table></div>'
+    : '<div class="card"><div class="empty">Todavía no hay jugadores registrados.</div></div>';
+  return form+table;
+}
+
+/* ---------- util ---------- */
+function fmt(min){ min=Math.round(min); if(min<60) return min+"m"; const h=Math.floor(min/60),m=min%60; return h+"h"+(m?" "+m+"m":""); }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* ---------- arranque ---------- */
+sb.auth.getSession().then(({data})=>{ state.session=data.session; if(state.session) loadAll(); else render(); });
+sb.auth.onAuthStateChange((_e,session)=>{ const was=!!state.session; state.session=session; if(session&&!was) loadAll(); else render(); });
 </script>
 </body>
 </html>
