@@ -49,6 +49,7 @@
   .seg-ctl{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
   .seg-ctl button{border:0;background:transparent;padding:6px 13px;font:inherit;font-size:13px;color:var(--soft);cursor:pointer}
   .seg-ctl button.on{background:var(--muted);color:var(--ink);font-weight:600}
+  .lang-ctl button{padding:5px 10px;font-size:12px;font-weight:700}
   .toolbar .search{flex:1;max-width:240px;margin-left:auto;padding:7px 11px;font-size:13px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
   .card2{text-align:left;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:15px 17px;cursor:pointer;font:inherit;color:inherit;transition:border-color .12s,box-shadow .12s;width:100%}
@@ -94,46 +95,164 @@
 <body>
 <div id="app"><div class="spin">Cargando…</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const SUPABASE_URL="https://erlqmyoltbroexeexvic.supabase.co";
 const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybHFteW9sdGJyb2V4ZWV4dmljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4ODE1OTgsImV4cCI6MjA5NjQ1NzU5OH0.lZLAC6RQlmzdukQRltvn9K2eaxYJ-tADNIGKAy_nbAI";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
 
-const DAYS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+// ---------- Idioma ----------
+let lang=(function(){try{return localStorage.getItem("centinela_lang")||"es";}catch(e){return "es";}})();
+function setLang(l){lang=l;try{localStorage.setItem("centinela_lang",l);}catch(e){}render();}
+const I18N={
+  es:{
+    subtitle:"Seguimiento del equipo",
+    navResumen:"Resumen",navAdmin:"Administración",navReportes:"Reportes",
+    btnUpdate:"Actualizar",btnLogout:"Salir",
+    loginTitle:"Iniciar sesión",loginEmail:"Correo",loginPass:"Contraseña",
+    loginBtn:"Entrar",loginErr:"No se pudo entrar: revisa correo y contraseña.",
+    loginNote:"Acceso solo para administradores.",
+    players:"jugadores",need1:"necesita atención",needN:"necesitan atención",onTrack:"al día",
+    filterAll:"Todos",filterRisk:"En riesgo",filterOk:"Al día",
+    searchPh:"Buscar jugador…",
+    emptyPlayers:"Aún no hay jugadores. Ve a <b>Administración</b> para añadir el primero.",
+    emptyFilter:"Ningún jugador coincide con el filtro.",
+    daysMet:"días cumplidos esta semana",
+    pillAtt:"Necesita atención",pillHoy:"Pendiente hoy",pillNone:"Sin datos aún",pillOk:"Al día",
+    syncNote:"Actualizado {time}. Las fotos se toman cada ~30 min.",
+    back:"← Volver al resumen",laborales:"laborales",
+    weekPrev:"← Anterior",weekNext:"Siguiente →",thisWeek:"esta semana",
+    minutesPerDay:"Minutos por día",
+    chartNote:"La línea cobre marca la meta de 1 hora. Los días de descanso no exigen tiempo.",
+    weeklyCompliance:"Cumplimiento por semana (últimas 6)",
+    statThisWeek:"Esta semana",statStreak:"Racha actual",statTotal:"Tiempo total en GW2",
+    day:"día",days:"días",
+    addPlayer:"Añadir jugador",displayName:"Nombre para mostrar",displayNameEx:"Ej. Aria",
+    apiKey:"Clave API de GW2",apiKeyEx:"Pega aquí la clave",
+    country:"País / región",firstWorkday:"Primer día laboral",
+    validateAdd:"Validar y añadir",
+    addNote:"La clave se valida con GW2 y se guarda escondida; nadie puede volver a leerla desde aquí.",
+    validating:"Validando la clave con Guild Wars 2…",
+    fillNameKey:"Completa el nombre y la clave.",
+    addedOk:"añadido correctamente.",
+    saveErr:"Error al guardar: ",keyErr:"Jugador creado, pero falló la clave: ",
+    playersTable:"Jugadores",colPlayer:"Jugador",colCountry:"País / zona",colDays:"Días",colMet:"Cumplidos",
+    colWeekStart:"Inicio semana",colStatus:"Estado",
+    active:"activo",inactive:"inactivo",
+    edit:"Editar",pause:"Pausar",reactivate:"Reactivar",delete:"Eliminar",
+    save:"Guardar",cancel:"Cancelar",
+    noPlayersYet:"Todavía no hay jugadores registrados.",
+    deleteConfirm:"¿Eliminar a {name}? Se borrarán su clave y su historial. No se puede deshacer.",
+    nameEmpty:"El nombre no puede estar vacío.",
+    keyInvalid:'La clave no es válida o le falta el permiso "account".',
+    keyCheckErr:"No se pudo verificar la clave. Intenta otra vez.",
+    keyConnErr:"Error de conexión al verificar la clave.",
+    reportsTitle:"Reporte de cumplimiento del equipo",
+    reportsSub:"Vista lista para compartir con tu jefa",
+    downloadPdf:"Descargar PDF",generating:"Generando…",
+    reportRange:"Semana",reportGeneratedOn:"Generado el",
+    reportPlayersLbl:"Jugadores",reportNeedAtt:"Necesitan atención",reportOnTrack:"Al día",
+    reportMethodology:"Metodología: los minutos jugados de un día = tiempo acumulado al final de ese día menos el del día anterior. Cada día laboral se evalúa por separado (se necesita al menos 1 hora); los días de descanso no exigen tiempo. Cada jugador se evalúa según su propio calendario laboral, por lo que el rango de fechas es una referencia general.",
+    reportFooter:"Generado automáticamente por Centinela",
+    pdfError:"No se pudo generar el PDF: "
+  },
+  en:{
+    subtitle:"Team tracking",
+    navResumen:"Overview",navAdmin:"Admin",navReportes:"Reports",
+    btnUpdate:"Refresh",btnLogout:"Sign out",
+    loginTitle:"Sign in",loginEmail:"Email",loginPass:"Password",
+    loginBtn:"Sign in",loginErr:"Couldn't sign in: check email and password.",
+    loginNote:"Admin access only.",
+    players:"players",need1:"needs attention",needN:"need attention",onTrack:"on track",
+    filterAll:"All",filterRisk:"At risk",filterOk:"On track",
+    searchPh:"Search player…",
+    emptyPlayers:"No players yet. Go to <b>Admin</b> to add the first one.",
+    emptyFilter:"No player matches the filter.",
+    daysMet:"days met this week",
+    pillAtt:"Needs attention",pillHoy:"Pending today",pillNone:"No data yet",pillOk:"On track",
+    syncNote:"Updated {time}. Snapshots are taken every ~30 min.",
+    back:"← Back to overview",laborales:"workdays",
+    weekPrev:"← Previous",weekNext:"Next →",thisWeek:"this week",
+    minutesPerDay:"Minutes per day",
+    chartNote:"The copper line marks the 1-hour goal. Rest days don't require any time.",
+    weeklyCompliance:"Weekly compliance (last 6)",
+    statThisWeek:"This week",statStreak:"Current streak",statTotal:"Total time in GW2",
+    day:"day",days:"days",
+    addPlayer:"Add player",displayName:"Display name",displayNameEx:"E.g. Aria",
+    apiKey:"GW2 API key",apiKeyEx:"Paste the key here",
+    country:"Country / region",firstWorkday:"First workday",
+    validateAdd:"Validate and add",
+    addNote:"The key is validated with GW2 and stored hidden; no one can read it back from here.",
+    validating:"Validating the key with Guild Wars 2…",
+    fillNameKey:"Fill in the name and key.",
+    addedOk:"added successfully.",
+    saveErr:"Error saving: ",keyErr:"Player created, but the key failed: ",
+    playersTable:"Players",colPlayer:"Player",colCountry:"Country / zone",colDays:"Days",colMet:"Met",
+    colWeekStart:"Week start",colStatus:"Status",
+    active:"active",inactive:"inactive",
+    edit:"Edit",pause:"Pause",reactivate:"Reactivate",delete:"Delete",
+    save:"Save",cancel:"Cancel",
+    noPlayersYet:"No players registered yet.",
+    deleteConfirm:"Delete {name}? Their key and history will be erased. This can't be undone.",
+    nameEmpty:"Name can't be empty.",
+    keyInvalid:'The key is invalid or missing the "account" permission.',
+    keyCheckErr:"Couldn't verify the key. Try again.",
+    keyConnErr:"Connection error while verifying the key.",
+    reportsTitle:"Team compliance report",
+    reportsSub:"Shareable view for your manager",
+    downloadPdf:"Download PDF",generating:"Generating…",
+    reportRange:"Week",reportGeneratedOn:"Generated on",
+    reportPlayersLbl:"Players",reportNeedAtt:"Need attention",reportOnTrack:"On track",
+    reportMethodology:"Methodology: a day's minutes played = cumulative time at that day's end minus the previous day's. Each workday is judged independently (at least 1 hour is required); rest days don't require any time. Each player is evaluated on their own work calendar, so the date range is a general reference.",
+    reportFooter:"Automatically generated by Centinela",
+    pdfError:"Couldn't generate the PDF: "
+  }
+};
+function t(key,vars){
+  let s=(I18N[lang]&&I18N[lang][key]!=null)?I18N[lang][key]:(I18N.es[key]||key);
+  if(vars)for(const k in vars)s=s.split("{"+k+"}").join(vars[k]);
+  return s;
+}
+function langToggle(){
+  return '<div class="seg-ctl lang-ctl">'+
+    '<button class="'+(lang==="es"?"on":"")+'" onclick="setLang(\'es\')">ES</button>'+
+    '<button class="'+(lang==="en"?"on":"")+'" onclick="setLang(\'en\')">EN</button></div>';
+}
 
-// Zonas horarias por país/región — valor = nombre IANA (maneja horario de verano automáticamente)
+const DAYS_ES=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const DAYS_EN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function DAYS(){return lang==="en"?DAYS_EN:DAYS_ES;}
+
 const TZS=[
-  ["America/Mexico_City","México"],
-  ["America/New_York","EUA — Este (Nueva York, Miami)"],
-  ["America/Chicago","EUA — Centro (Chicago, Dallas)"],
-  ["America/Denver","EUA — Montaña (Denver)"],
-  ["America/Los_Angeles","EUA — Pacífico (Los Ángeles)"],
-  ["America/Bogota","Colombia / Perú / Ecuador"],
-  ["America/Caracas","Venezuela"],
-  ["America/Santiago","Chile"],
-  ["America/Argentina/Buenos_Aires","Argentina / Uruguay"],
-  ["America/Sao_Paulo","Brasil (Brasilia)"],
-  ["Europe/London","Reino Unido / Portugal / Irlanda"],
-  ["Europe/Paris","España / Francia / Europa Central"],
-  ["Europe/Helsinki","Grecia / Finlandia / Estonia / Europa del Este"],
-  ["Europe/Moscow","Rusia (Moscú)"],
-  ["Africa/Casablanca","Marruecos"],
-  ["Africa/Johannesburg","Sudáfrica"],
-  ["Asia/Dubai","Emiratos / Arabia Saudita"],
-  ["Asia/Kolkata","India"],
-  ["Asia/Bangkok","Tailandia / Vietnam"],
-  ["Asia/Shanghai","China / Singapur / Filipinas"],
-  ["Asia/Tokyo","Japón / Corea del Sur"],
-  ["Australia/Sydney","Australia (Este)"],
-  ["Australia/Perth","Australia (Oeste)"],
-  ["Pacific/Auckland","Nueva Zelanda"],
+  ["America/Mexico_City","México","Mexico"],
+  ["America/New_York","EUA — Este (Nueva York, Miami)","US — East (New York, Miami)"],
+  ["America/Chicago","EUA — Centro (Chicago, Dallas)","US — Central (Chicago, Dallas)"],
+  ["America/Denver","EUA — Montaña (Denver)","US — Mountain (Denver)"],
+  ["America/Los_Angeles","EUA — Pacífico (Los Ángeles)","US — Pacific (Los Angeles)"],
+  ["America/Bogota","Colombia / Perú / Ecuador","Colombia / Peru / Ecuador"],
+  ["America/Caracas","Venezuela","Venezuela"],
+  ["America/Santiago","Chile","Chile"],
+  ["America/Argentina/Buenos_Aires","Argentina / Uruguay","Argentina / Uruguay"],
+  ["America/Sao_Paulo","Brasil (Brasilia)","Brazil (Brasília)"],
+  ["Europe/London","Reino Unido / Portugal / Irlanda","United Kingdom / Portugal / Ireland"],
+  ["Europe/Paris","España / Francia / Europa Central","Spain / France / Central Europe"],
+  ["Europe/Helsinki","Grecia / Finlandia / Estonia / Europa del Este","Greece / Finland / Estonia / Eastern Europe"],
+  ["Europe/Moscow","Rusia (Moscú)","Russia (Moscow)"],
+  ["Africa/Casablanca","Marruecos","Morocco"],
+  ["Africa/Johannesburg","Sudáfrica","South Africa"],
+  ["Asia/Dubai","Emiratos / Arabia Saudita","UAE / Saudi Arabia"],
+  ["Asia/Kolkata","India","India"],
+  ["Asia/Bangkok","Tailandia / Vietnam","Thailand / Vietnam"],
+  ["Asia/Shanghai","China / Singapur / Filipinas","China / Singapore / Philippines"],
+  ["Asia/Tokyo","Japón / Corea del Sur","Japan / South Korea"],
+  ["Australia/Sydney","Australia (Este)","Australia (East)"],
+  ["Australia/Perth","Australia (Oeste)","Australia (West)"],
+  ["Pacific/Auckland","Nueva Zelanda","New Zealand"],
 ];
 
-function tzLabel(tz){const t=TZS.find(x=>x[0]===tz);return t?t[1]:(tz||"—");}
-// Conversión de fecha con zona horaria real (maneja DST automáticamente)
+function tzLabel(tz){const row=TZS.find(x=>x[0]===tz);if(!row)return tz||"—";return lang==="en"?row[2]:row[1];}
 function localDate(ms,tz){return new Date(ms).toLocaleDateString("en-CA",{timeZone:tz||"America/Mexico_City"});}
 function todayLocal(tz){return localDate(Date.now(),tz);}
-// Zona horaria de un jugador (nueva columna; fallback al offset viejo si aún no migrado)
 const OFFSET_TZ={"-8":"America/Los_Angeles","-7":"America/Denver","-6":"America/Mexico_City","-5":"America/New_York","-4":"America/Santiago","-3":"America/Argentina/Buenos_Aires","0":"Europe/London","1":"Europe/Paris","2":"Europe/Helsinki"};
 function playerTZ(p){return p.timezone||(OFFSET_TZ[String(p.tz_offset)])||"America/Mexico_City";}
 
@@ -159,13 +278,13 @@ function endAge(da,s){let r=null;for(const d of da.dates){if(d<=s)r=da.byDate[d]
 function minutesFor(da,s){const e=endAge(da,s),pv=endAge(da,addDays(s,-1));if(e==null||pv==null)return{min:null,partial:true};return{min:Math.max(0,(e-pv)/60),partial:false};}
 function statusFor(p,da,s){
   const tz=playerTZ(p),ws=wsForPlayer(p,s),today=todayLocal(tz),working=isWorking(s,ws);
-  if(s>today)return{k:"next",label:"próximo",min:null,working};
+  if(s>today)return{k:"next",min:null,working};
   const r=minutesFor(da,s);
-  if(!working)return{k:"rest",label:"descanso",min:r.min,working};
-  if(r.partial)return{k:"part",label:"sin datos",min:null,working};
-  if(r.min>=60)return{k:"ok",label:"cumplió",min:r.min,working};
-  if(s===today)return{k:"cur",label:"en curso",min:r.min,working};
-  return{k:"no",label:"no cumplió",min:r.min,working};
+  if(!working)return{k:"rest",min:r.min,working};
+  if(r.partial)return{k:"part",min:null,working};
+  if(r.min>=60)return{k:"ok",min:r.min,working};
+  if(s===today)return{k:"cur",min:r.min,working};
+  return{k:"no",min:r.min,working};
 }
 function weekData(p,off){
   const tz=playerTZ(p),today=todayLocal(tz);
@@ -194,7 +313,16 @@ function currentStreak(p){
 }
 function totalHours(p){const s=state.snaps.filter(x=>x.player_id===p.id);if(!s.length)return null;return Math.max(...s.map(x=>x.age_seconds))/3600;}
 
-let state={session:null,view:"resumen",selected:null,weekOffset:0,filter:"todos",search:"",
+function reportWeekStartISO(off){
+  const ref=weekStartOf(todayLocal("America/Mexico_City"),1);
+  return addDays(ref,off*7);
+}
+function reportWeekLabel(off){
+  const ws=reportWeekStartISO(off);
+  return ddmm(ws)+" – "+ddmm(addDays(ws,6));
+}
+
+let state={session:null,view:"resumen",selected:null,weekOffset:0,reportOffset:0,filter:"todos",search:"",
            players:[],schedules:[],snaps:[],loading:true,addMsg:null,lastSync:null,
            editing:null};
 
@@ -214,7 +342,7 @@ async function login(){
   const email=document.getElementById("email").value.trim(),pass=document.getElementById("pass").value;
   const box=document.getElementById("loginerr");box.textContent="";
   const res=await sb.auth.signInWithPassword({email,password:pass});
-  if(res.error)box.textContent="No se pudo entrar: revisa correo y contraseña.";
+  if(res.error)box.textContent=t("loginErr");
 }
 async function logout(){await sb.auth.signOut();}
 
@@ -222,16 +350,16 @@ async function validateKey(key){
   try{
     const r=await fetch("https://api.guildwars2.com/v2/account?access_token="+encodeURIComponent(key));
     if(r.status===200){const a=await r.json();return{ok:true,name:a.name,age:a.age};}
-    if(r.status===401||r.status===403)return{ok:false,error:'La clave no es válida o le falta el permiso "account".'};
-    return{ok:false,error:"No se pudo verificar la clave. Intenta otra vez."};
-  }catch(e){return{ok:false,error:"Error de conexión al verificar la clave."}}
+    if(r.status===401||r.status===403)return{ok:false,error:t("keyInvalid")};
+    return{ok:false,error:t("keyCheckErr")};
+  }catch(e){return{ok:false,error:t("keyConnErr")}}
 }
 
 async function addPlayer(){
   const name=v("f_name").trim(),key=v("f_key").trim(),tz=v("f_tz"),ws=parseInt(v("f_ws"));
   const btn=document.getElementById("addbtn");
-  if(!name||!key){setAddMsg("Completa el nombre y la clave.",true);return;}
-  btn.disabled=true;setAddMsg("Validando la clave con Guild Wars 2…",false);
+  if(!name||!key){setAddMsg(t("fillNameKey"),true);return;}
+  btn.disabled=true;setAddMsg(t("validating"),false);
   const val_=await validateKey(key);
   if(!val_.ok){setAddMsg(val_.error,true);btn.disabled=false;return;}
   const masked=key.slice(0,4)+"····"+key.slice(-4);
@@ -239,20 +367,20 @@ async function addPlayer(){
     friendly_name:name,account_name:val_.name,tz_city:tzLabel(tz),
     tz_offset:0,timezone:tz,week_start_day:ws,active:true
   }).select().single();
-  if(ins.error){setAddMsg("Error al guardar: "+ins.error.message,true);btn.disabled=false;return;}
+  if(ins.error){setAddMsg(t("saveErr")+ins.error.message,true);btn.disabled=false;return;}
   const p=ins.data;
   const k=await sb.from("player_keys").insert({player_id:p.id,api_key:key,key_masked:masked});
-  if(k.error){setAddMsg("Jugador creado, pero falló la clave: "+k.error.message,true);btn.disabled=false;await loadAll();return;}
+  if(k.error){setAddMsg(t("keyErr")+k.error.message,true);btn.disabled=false;await loadAll();return;}
   await sb.from("schedules").insert({player_id:p.id,week_start_day:ws,effective_from:todayLocal(tz)});
   btn.disabled=false;
-  state.addMsg={text:"✓ "+name+" ("+val_.name+") añadido correctamente.",err:false};
+  state.addMsg={text:"✓ "+name+" ("+val_.name+") "+t("addedOk"),err:false};
   await loadAll();
 }
 
 async function saveEdit(id){
   const name=document.getElementById("edit_name").value.trim();
   const tz=document.getElementById("edit_tz").value;
-  if(!name){alert("El nombre no puede estar vacío.");return;}
+  if(!name){alert(t("nameEmpty"));return;}
   await sb.from("players").update({friendly_name:name,timezone:tz,tz_city:tzLabel(tz)}).eq("id",id);
   state.editing=null;await loadAll();
 }
@@ -261,7 +389,7 @@ function cancelEdit(){state.editing=null;render();}
 
 async function toggleActive(id,cur){await sb.from("players").update({active:!cur}).eq("id",id);await loadAll();}
 async function delPlayer(id,name){
-  if(!confirm("¿Eliminar a "+name+"? Se borrarán su clave y su historial. No se puede deshacer."))return;
+  if(!confirm(t("deleteConfirm",{name:name})))return;
   await sb.from("players").delete().eq("id",id);await loadAll();
 }
 async function changeWs(id,ws){
@@ -277,6 +405,8 @@ function openPlayer(id){state.selected=id;state.weekOffset=0;state.view="detalle
 function back(){state.view="resumen";state.weekOffset=0;render();}
 function prevWeek(){state.weekOffset--;render();}
 function nextWeek(){if(state.weekOffset<0){state.weekOffset++;render();}}
+function reportPrevWeek(){state.reportOffset--;render();}
+function reportNextWeek(){if(state.reportOffset<0){state.reportOffset++;render();}}
 function setFilter(f){state.filter=f;render();}
 function setSearch(val){state.search=val;render();const el=document.getElementById("searchbox");if(el){el.focus();el.setSelectionRange(val.length,val.length);}}
 
@@ -291,12 +421,15 @@ function minutesChart(days){
     if(m!=null&&m>0){const by=y(m),bh=pT+iH-by;
       g+='<rect x="'+(cx-bW/2)+'" y="'+by+'" width="'+bW+'" height="'+bh+'" rx="4" fill="'+col+'"/>';
       g+='<text x="'+cx+'" y="'+(by-5)+'" text-anchor="middle" font-size="11" fill="#6B6457">'+fmt(m)+'</text>';
-    }else{g+='<text x="'+cx+'" y="'+(pT+iH-6)+'" text-anchor="middle" font-size="10" fill="#B9AE9C">'+(d.st.working?(d.st.k==="next"?"·":(d.st.k==="part"?"s/d":"0")):"descanso")+'</text>';}
-    g+='<text x="'+cx+'" y="'+(H-17)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#26231D">'+DAYS[dow(d.date)]+'</text>';
+    }else{
+      const lbl=d.st.working?(d.st.k==="next"?"·":(d.st.k==="part"?(lang==="en"?"n/d":"s/d"):"0")):(lang==="en"?"rest":"descanso");
+      g+='<text x="'+cx+'" y="'+(pT+iH-6)+'" text-anchor="middle" font-size="10" fill="#B9AE9C">'+lbl+'</text>';
+    }
+    g+='<text x="'+cx+'" y="'+(H-17)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#26231D">'+DAYS()[dow(d.date)]+'</text>';
     g+='<text x="'+cx+'" y="'+(H-4)+'" text-anchor="middle" font-size="9" fill="#6B6457">'+ddmm(d.date)+'</text>';
   });
   g+='<line x1="'+pL+'" y1="'+gY+'" x2="'+(W-pR)+'" y2="'+gY+'" stroke="#B5532B" stroke-width="1.5" stroke-dasharray="4 4" opacity=".7"/>';
-  g+='<text x="'+(W-pR)+'" y="'+(gY-4)+'" text-anchor="end" font-size="9" fill="#B5532B">meta 1 h</text>';
+  g+='<text x="'+(W-pR)+'" y="'+(gY-4)+'" text-anchor="end" font-size="9" fill="#B5532B">'+(lang==="en"?"1h goal":"meta 1 h")+'</text>';
   return'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto" font-family="Hanken Grotesk">'+g+'</svg>';
 }
 function trendChart(weeks){
@@ -318,62 +451,64 @@ const LOGO='<svg class="logo" viewBox="0 0 48 48" fill="none"><path d="M24 4l16 
 function render(){
   const app=document.getElementById("app");
   if(!state.session){app.innerHTML=loginView();return;}
-  const body=state.view==="admin"?adminView():state.view==="detalle"?detalleView():resumenView();
+  const body=state.view==="admin"?adminView():state.view==="reportes"?reportesView():state.view==="detalle"?detalleView():resumenView();
   app.innerHTML='<div class="wrap">'+
-    '<div class="top">'+LOGO+'<div><div class="eyebrow">Centinela</div><h1>Seguimiento del equipo</h1></div>'+
-    '<div class="userbar"><span>'+esc(state.session.user.email)+'</span>'+
-    '<button class="btn ghost sm" onclick="loadAll()">Actualizar</button>'+
-    '<button class="btn ghost sm" onclick="logout()">Salir</button></div></div>'+
+    '<div class="top">'+LOGO+'<div><div class="eyebrow">Centinela</div><h1>'+t("subtitle")+'</h1></div>'+
+    '<div class="userbar">'+langToggle()+'<span>'+esc(state.session.user.email)+'</span>'+
+    '<button class="btn ghost sm" onclick="loadAll()">'+t("btnUpdate")+'</button>'+
+    '<button class="btn ghost sm" onclick="logout()">'+t("btnLogout")+'</button></div></div>'+
     '<div class="nav">'+
-    '<button class="'+(state.view!=="admin"?"active":"")+'" onclick="setView(\'resumen\')">Resumen</button>'+
-    '<button class="'+(state.view==="admin"?"active":"")+'" onclick="setView(\'admin\')">Administración</button>'+
+    '<button class="'+(state.view!=="admin"&&state.view!=="reportes"?"active":"")+'" onclick="setView(\'resumen\')">'+t("navResumen")+'</button>'+
+    '<button class="'+(state.view==="reportes"?"active":"")+'" onclick="setView(\'reportes\')">'+t("navReportes")+'</button>'+
+    '<button class="'+(state.view==="admin"?"active":"")+'" onclick="setView(\'admin\')">'+t("navAdmin")+'</button>'+
     '</div>'+body+'</div>';
 }
 
 function loginView(){
   return'<div class="center"><div class="loginbox">'+
-    '<div style="text-align:center;margin-bottom:18px">'+LOGO+'<div class="eyebrow" style="margin-top:8px">Centinela</div><h1 style="font-size:24px">Iniciar sesión</h1></div>'+
-    '<div class="card"><div class="field"><label>Correo</label><input id="email" type="email" autocomplete="username"></div>'+
-    '<div class="field"><label>Contraseña</label><input id="pass" type="password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')login()"></div>'+
-    '<button class="btn" style="width:100%;justify-content:center" onclick="login()">Entrar</button>'+
+    '<div style="text-align:right;margin-bottom:10px">'+langToggle()+'</div>'+
+    '<div style="text-align:center;margin-bottom:18px">'+LOGO+'<div class="eyebrow" style="margin-top:8px">Centinela</div><h1 style="font-size:24px">'+t("loginTitle")+'</h1></div>'+
+    '<div class="card"><div class="field"><label>'+t("loginEmail")+'</label><input id="email" type="email" autocomplete="username"></div>'+
+    '<div class="field"><label>'+t("loginPass")+'</label><input id="pass" type="password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')login()"></div>'+
+    '<button class="btn" style="width:100%;justify-content:center" onclick="login()">'+t("loginBtn")+'</button>'+
     '<div id="loginerr" class="err"></div></div>'+
-    '<p class="note" style="text-align:center">Acceso solo para administradores.</p></div></div>';
+    '<p class="note" style="text-align:center">'+t("loginNote")+'</p></div></div>';
 }
 
 function pillFor(level){
-  return level==="atencion"?'<span class="st att">Necesita atención</span>'
-    :level==="hoy"?'<span class="st hoy">Pendiente hoy</span>'
-    :level==="sindatos"?'<span class="st none">Sin datos aún</span>'
-    :'<span class="st ok">Al día</span>';
+  return level==="atencion"?'<span class="st att">'+t("pillAtt")+'</span>'
+    :level==="hoy"?'<span class="st hoy">'+t("pillHoy")+'</span>'
+    :level==="sindatos"?'<span class="st none">'+t("pillNone")+'</span>'
+    :'<span class="st ok">'+t("pillOk")+'</span>';
 }
 function weekStrip(days){
   return days.filter(d=>d.st.working).map(d=>{
     const c=d.st.k==="ok"?"ok":d.st.k==="no"?"no":d.st.k==="cur"?"cur":d.st.k==="next"?"next":d.st.k==="part"?"part":"";
-    return'<span class="seg '+c+'">'+DAYS[dow(d.date)][0]+'</span>';
+    return'<span class="seg '+c+'">'+DAYS()[dow(d.date)][0]+'</span>';
   }).join("");
 }
 
 function resumenView(){
   if(state.loading)return'<div class="spin">Cargando datos…</div>';
   const active=state.players.filter(p=>p.active);
-  if(!active.length)return'<div class="card"><div class="empty">Aún no hay jugadores. Ve a <b>Administración</b> para añadir el primero.</div></div>';
+  if(!active.length)return'<div class="card"><div class="empty">'+t("emptyPlayers")+'</div></div>';
   const ord={atencion:0,hoy:1,aldia:2,sindatos:3};
   let list=active.map(p=>({p,w:weekData(p,0)}));
   list.sort((a,b)=>(ord[a.w.level]-ord[b.w.level])||a.p.friendly_name.localeCompare(b.p.friendly_name));
   const att=list.filter(x=>x.w.level==="atencion").length;
-  const head='<div class="summary-h"><b>'+active.length+'</b> jugadores · <span class="'+(att?"bad":"")+'">'+att+' '+(att===1?"necesita":"necesitan")+' atención</span> · '+(active.length-att)+' al día</div>';
+  const head='<div class="summary-h"><b>'+active.length+'</b> '+t("players")+' · <span class="'+(att?"bad":"")+'">'+att+' '+(att===1?t("need1"):t("needN"))+'</span> · '+(active.length-att)+' '+t("onTrack")+'</div>';
   let shown=list;
   if(state.filter==="riesgo")shown=list.filter(x=>x.w.level==="atencion"||x.w.level==="hoy");
   else if(state.filter==="aldia")shown=list.filter(x=>x.w.level==="aldia");
   if(state.search){const q=state.search.toLowerCase();shown=shown.filter(x=>x.p.friendly_name.toLowerCase().includes(q)||(x.p.account_name||"").toLowerCase().includes(q));}
   const tools='<div class="toolbar"><div class="seg-ctl">'+
-    '<button class="'+(state.filter==="todos"?"on":"")+'" onclick="setFilter(\'todos\')">Todos</button>'+
-    '<button class="'+(state.filter==="riesgo"?"on":"")+'" onclick="setFilter(\'riesgo\')">En riesgo</button>'+
-    '<button class="'+(state.filter==="aldia"?"on":"")+'" onclick="setFilter(\'aldia\')">Al día</button></div>'+
-    '<input id="searchbox" class="search" placeholder="Buscar jugador…" value="'+esc(state.search)+'" oninput="setSearch(this.value)"></div>';
+    '<button class="'+(state.filter==="todos"?"on":"")+'" onclick="setFilter(\'todos\')">'+t("filterAll")+'</button>'+
+    '<button class="'+(state.filter==="riesgo"?"on":"")+'" onclick="setFilter(\'riesgo\')">'+t("filterRisk")+'</button>'+
+    '<button class="'+(state.filter==="aldia"?"on":"")+'" onclick="setFilter(\'aldia\')">'+t("filterOk")+'</button></div>'+
+    '<input id="searchbox" class="search" placeholder="'+t("searchPh")+'" value="'+esc(state.search)+'" oninput="setSearch(this.value)"></div>';
   const cards=shown.length?'<div class="grid">'+shown.map(x=>card(x.p,x.w)).join("")+'</div>'
-    :'<div class="card"><div class="empty">Ningún jugador coincide con el filtro.</div></div>';
-  const sync=state.lastSync?'<p class="note" style="margin-top:12px">Actualizado '+state.lastSync.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})+'. Las fotos se toman cada ~30 min.</p>':"";
+    :'<div class="card"><div class="empty">'+t("emptyFilter")+'</div></div>';
+  const sync=state.lastSync?'<p class="note" style="margin-top:12px">'+t("syncNote",{time:state.lastSync.toLocaleTimeString(lang==="en"?"en-US":"es-MX",{hour:"2-digit",minute:"2-digit"})})+'</p>':"";
   return head+tools+cards+sync;
 }
 
@@ -382,78 +517,256 @@ function card(p,w){
     '<div class="c-top"><div><div class="c-name">'+esc(p.friendly_name)+'</div>'+
     '<div class="c-acct">'+esc(p.account_name||"—")+' · '+esc(tzLabel(playerTZ(p)))+'</div></div>'+pillFor(w.level)+'</div>'+
     '<div class="strip">'+weekStrip(w.days)+'</div>'+
-    '<div class="c-bot"><b>'+w.met+'/5</b> días cumplidos esta semana</div></button>';
+    '<div class="c-bot"><b>'+w.met+'/5</b> '+t("daysMet")+'</div></button>';
 }
 
 function detalleView(){
   const p=state.players.find(x=>x.id===state.selected);
   if(!p)return resumenView();
   const w=weekData(p,state.weekOffset),ws=wsForPlayer(p,w.weekStart);
-  const workLabel=DAYS[ws]+"–"+DAYS[(ws+4)%7];
+  const workLabel=DAYS()[ws]+"–"+DAYS()[(ws+4)%7];
   const range=ddmm(w.weekStart)+" – "+ddmm(addDays(w.weekStart,6));
   const trend=weeklyTrend(p,6),streak=currentStreak(p),th=totalHours(p);
-  return'<button class="back" onclick="back()">← Volver al resumen</button>'+
+  return'<button class="back" onclick="back()">'+t("back")+'</button>'+
     '<div class="card"><div class="dhead"><div><h2>'+esc(p.friendly_name)+'</h2>'+
-    '<div class="dmeta">'+esc(p.account_name||"—")+' · '+esc(tzLabel(playerTZ(p)))+' · laborales '+workLabel+'</div></div>'+
+    '<div class="dmeta">'+esc(p.account_name||"—")+' · '+esc(tzLabel(playerTZ(p)))+' · '+t("laborales")+' '+workLabel+'</div></div>'+
     pillFor(w.level)+'</div></div>'+
-    '<div class="weeknav"><button class="btn ghost sm" onclick="prevWeek()">← Anterior</button>'+
-    '<span class="rng">'+range+(state.weekOffset===0?" · esta semana":"")+'</span>'+
-    '<button class="btn ghost sm" onclick="nextWeek()" '+(state.weekOffset>=0?"disabled":"")+'>Siguiente →</button></div>'+
-    '<div class="card"><div class="ctitle">Minutos por día</div>'+minutesChart(w.days)+
-    '<p class="note">La línea cobre marca la meta de 1 hora. Los días de descanso no exigen tiempo.</p></div>'+
-    '<div class="card"><div class="ctitle">Cumplimiento por semana (últimas 6)</div>'+trendChart(trend)+'</div>'+
+    '<div class="weeknav"><button class="btn ghost sm" onclick="prevWeek()">'+t("weekPrev")+'</button>'+
+    '<span class="rng">'+range+(state.weekOffset===0?" · "+t("thisWeek"):"")+'</span>'+
+    '<button class="btn ghost sm" onclick="nextWeek()" '+(state.weekOffset>=0?"disabled":"")+'>'+t("weekNext")+'</button></div>'+
+    '<div class="card"><div class="ctitle">'+t("minutesPerDay")+'</div>'+minutesChart(w.days)+
+    '<p class="note">'+t("chartNote")+'</p></div>'+
+    '<div class="card"><div class="ctitle">'+t("weeklyCompliance")+'</div>'+trendChart(trend)+'</div>'+
     '<div class="stats">'+
-    '<div class="stat"><div class="lab">Esta semana</div><div class="val">'+w.met+'/5</div></div>'+
-    '<div class="stat"><div class="lab">Racha actual</div><div class="val">'+streak+' '+(streak===1?"día":"días")+'</div></div>'+
-    '<div class="stat"><div class="lab">Tiempo total en GW2</div><div class="val">'+(th!=null?(Math.round(th*10)/10)+" h":"—")+'</div></div>'+
+    '<div class="stat"><div class="lab">'+t("statThisWeek")+'</div><div class="val">'+w.met+'/5</div></div>'+
+    '<div class="stat"><div class="lab">'+t("statStreak")+'</div><div class="val">'+streak+' '+(streak===1?t("day"):t("days"))+'</div></div>'+
+    '<div class="stat"><div class="lab">'+t("statTotal")+'</div><div class="val">'+(th!=null?(Math.round(th*10)/10)+" h":"—")+'</div></div>'+
     '</div>';
 }
 
+function reportesView(){
+  if(state.loading)return'<div class="spin">Cargando datos…</div>';
+  const active=state.players.filter(p=>p.active);
+  const off=state.reportOffset;
+  const ord={atencion:0,hoy:1,aldia:2,sindatos:3};
+  let list=active.map(p=>({p,w:weekData(p,off)}));
+  list.sort((a,b)=>(ord[a.w.level]-ord[b.w.level])||a.p.friendly_name.localeCompare(b.p.friendly_name));
+  const att=list.filter(x=>x.w.level==="atencion").length;
+  const ok=list.filter(x=>x.w.level==="aldia").length;
+  const range=reportWeekLabel(off);
+  const head='<div class="dhead" style="margin-bottom:2px"><div><h2 style="font-size:22px">'+t("reportsTitle")+'</h2>'+
+    '<div class="dmeta">'+t("reportsSub")+'</div></div>'+
+    '<button class="btn sm" id="pdfbtn" onclick="downloadReportPDF()" style="margin-left:auto;align-self:center">⬇ '+t("downloadPdf")+'</button></div>';
+  const weeknav='<div class="weeknav"><button class="btn ghost sm" onclick="reportPrevWeek()">'+t("weekPrev")+'</button>'+
+    '<span class="rng">'+range+(off===0?" · "+t("thisWeek"):"")+'</span>'+
+    '<button class="btn ghost sm" onclick="reportNextWeek()" '+(off>=0?"disabled":"")+'>'+t("weekNext")+'</button></div>';
+  const stats='<div class="stats">'+
+    '<div class="stat"><div class="lab">'+t("reportPlayersLbl")+'</div><div class="val">'+active.length+'</div></div>'+
+    '<div class="stat"><div class="lab">'+t("reportNeedAtt")+'</div><div class="val" style="color:var(--brick)">'+att+'</div></div>'+
+    '<div class="stat"><div class="lab">'+t("reportOnTrack")+'</div><div class="val" style="color:var(--emerald)">'+ok+'</div></div>'+
+    '</div>';
+  let rows="";
+  for(const row of list){
+    const p=row.p,w=row.w;
+    rows+='<tr>'+
+      '<td><b>'+esc(p.friendly_name)+'</b><div class="c-acct">'+esc(p.account_name||"—")+'</div></td>'+
+      '<td>'+esc(tzLabel(playerTZ(p)))+'</td>'+
+      '<td><div class="strip" style="margin:0">'+weekStrip(w.days)+'</div></td>'+
+      '<td><b>'+w.met+'/5</b></td>'+
+      '<td>'+pillFor(w.level)+'</td>'+
+      '</tr>';
+  }
+  const table=active.length?
+    '<div class="card"><table><thead><tr><th>'+t("colPlayer")+'</th><th>'+t("colCountry")+'</th><th>'+t("colDays")+'</th><th>'+t("colMet")+'</th><th>'+t("colStatus")+'</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table></div>'
+    :'<div class="card"><div class="empty">'+t("emptyPlayers")+'</div></div>';
+  return head+weeknav+stats+table+
+    '<p class="note" style="margin-top:10px">'+t("reportMethodology")+'</p>';
+}
+
+async function downloadReportPDF(){
+  const btn=document.getElementById("pdfbtn");
+  const prevLabel=btn?btn.innerHTML:"";
+  if(btn){btn.disabled=true;btn.textContent=t("generating");}
+  try{
+    if(!window.jspdf||!window.jspdf.jsPDF)throw new Error("jsPDF");
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:"pt",format:"a4"});
+    const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+    const M=40;
+    const active=state.players.filter(p=>p.active);
+    const off=state.reportOffset;
+    const ord={atencion:0,hoy:1,aldia:2,sindatos:3};
+    let list=active.map(p=>({p,w:weekData(p,off)}));
+    list.sort((a,b)=>(ord[a.w.level]-ord[b.w.level])||a.p.friendly_name.localeCompare(b.p.friendly_name));
+    const att=list.filter(x=>x.w.level==="atencion").length;
+    const ok=list.filter(x=>x.w.level==="aldia").length;
+    const range=reportWeekLabel(off);
+
+    doc.setFillColor(181,83,43);
+    doc.rect(0,0,W,86,"F");
+    doc.setTextColor(255,255,255);
+    doc.setFont("helvetica","bold");doc.setFontSize(20);
+    doc.text("Centinela",M,36);
+    doc.setFont("helvetica","normal");doc.setFontSize(11);
+    doc.text(t("reportsTitle"),M,56);
+    doc.setFontSize(9);
+    doc.text(t("reportsSub"),M,72);
+    doc.setFontSize(10);
+    doc.text(t("reportRange")+": "+range,W-M,36,{align:"right"});
+    doc.text(t("reportGeneratedOn")+": "+new Date().toLocaleString(lang==="en"?"en-US":"es-MX"),W-M,52,{align:"right"});
+
+    let y=116;
+    const statBoxes=[
+      {label:t("reportPlayersLbl"),value:String(active.length),color:[38,35,29]},
+      {label:t("reportNeedAtt"),value:String(att),color:[174,56,45]},
+      {label:t("reportOnTrack"),value:String(ok),color:[59,122,78]}
+    ];
+    const gap=14,boxW=(W-2*M-2*gap)/3,boxH=58;
+    statBoxes.forEach((s,i)=>{
+      const x=M+i*(boxW+gap);
+      doc.setFillColor(251,248,242);doc.setDrawColor(226,216,200);
+      doc.roundedRect(x,y,boxW,boxH,6,6,"FD");
+      doc.setTextColor(107,100,87);doc.setFont("helvetica","normal");doc.setFontSize(9);
+      doc.text(s.label,x+14,y+22);
+      doc.setTextColor(s.color[0],s.color[1],s.color[2]);doc.setFont("helvetica","bold");doc.setFontSize(22);
+      doc.text(s.value,x+14,y+46);
+    });
+    y+=boxH+26;
+
+    const cols=[
+      {w:0.30,label:t("colPlayer")},
+      {w:0.22,label:t("colCountry")},
+      {w:0.20,label:t("colDays")},
+      {w:0.10,label:t("colMet")},
+      {w:0.18,label:t("colStatus")}
+    ];
+    const tableW=W-2*M;
+    let cx=M;
+    const colX=cols.map(c=>{const x=cx;cx+=c.w*tableW;return x;});
+
+    function drawTableHeader(){
+      doc.setFillColor(237,230,216);
+      doc.rect(M,y,tableW,24,"F");
+      doc.setTextColor(38,35,29);doc.setFont("helvetica","bold");doc.setFontSize(9);
+      cols.forEach((c,i)=>doc.text(c.label.toUpperCase(),colX[i]+10,y+16));
+      y+=24;
+    }
+    drawTableHeader();
+
+    const rowH=44;
+    const dayColors={ok:[59,122,78],no:[174,56,45],cur:[201,138,43],next:[217,205,186],part:[185,174,156]};
+    const pillColors={
+      atencion:{bg:[251,238,236],fg:[174,56,45],label:t("pillAtt")},
+      hoy:{bg:[251,241,223],fg:[201,138,43],label:t("pillHoy")},
+      sindatos:{bg:[237,230,216],fg:[107,100,87],label:t("pillNone")},
+      aldia:{bg:[234,243,236],fg:[59,122,78],label:t("pillOk")}
+    };
+
+    list.forEach((row,idx)=>{
+      if(y+rowH>H-90){
+        doc.addPage();
+        y=M;
+        drawTableHeader();
+      }
+      if(idx%2===1){doc.setFillColor(251,248,242);doc.rect(M,y,tableW,rowH,"F");}
+      const p=row.p,w=row.w;
+      doc.setTextColor(38,35,29);doc.setFont("helvetica","bold");doc.setFontSize(11);
+      doc.text(String(p.friendly_name||"—"),colX[0]+10,y+19);
+      doc.setTextColor(107,100,87);doc.setFont("helvetica","normal");doc.setFontSize(9);
+      doc.text(String(p.account_name||"—"),colX[0]+10,y+33);
+
+      doc.setTextColor(38,35,29);doc.setFontSize(9);
+      const tzLines=doc.splitTextToSize(tzLabel(playerTZ(p)),cols[1].w*tableW-16);
+      doc.text(tzLines,colX[1]+10,y+rowH/2-(tzLines.length-1)*5+3);
+
+      let dx=colX[2]+10;
+      const dSize=14,dGap=3;
+      w.days.filter(d=>d.st.working).forEach(d=>{
+        const col=d.st.k==="ok"?dayColors.ok:d.st.k==="no"?dayColors.no:d.st.k==="cur"?dayColors.cur:d.st.k==="next"?dayColors.next:d.st.k==="part"?dayColors.part:[217,205,186];
+        doc.setFillColor(col[0],col[1],col[2]);
+        doc.roundedRect(dx,y+rowH/2-dSize/2,dSize,dSize,3,3,"F");
+        doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(7);
+        doc.text(DAYS()[dow(d.date)][0],dx+dSize/2,y+rowH/2+2.5,{align:"center"});
+        dx+=dSize+dGap;
+      });
+
+      doc.setTextColor(38,35,29);doc.setFont("helvetica","bold");doc.setFontSize(12);
+      doc.text(w.met+"/5",colX[3]+10,y+rowH/2+4);
+
+      const pc=pillColors[w.level];
+      const pillW=Math.min(cols[4].w*tableW-16,108);
+      doc.setFillColor(pc.bg[0],pc.bg[1],pc.bg[2]);
+      doc.roundedRect(colX[4]+8,y+rowH/2-11,pillW,22,11,11,"F");
+      doc.setTextColor(pc.fg[0],pc.fg[1],pc.fg[2]);doc.setFont("helvetica","bold");doc.setFontSize(8);
+      doc.text(pc.label,colX[4]+8+pillW/2,y+rowH/2+3,{align:"center"});
+
+      y+=rowH;
+      doc.setDrawColor(226,216,200);
+      doc.line(M,y,M+tableW,y);
+    });
+
+    y+=22;
+    if(y>H-70){doc.addPage();y=M;}
+    doc.setTextColor(107,100,87);doc.setFont("helvetica","normal");doc.setFontSize(8);
+    const noteLines=doc.splitTextToSize(t("reportMethodology"),tableW);
+    doc.text(noteLines,M,y);
+    y+=noteLines.length*10+12;
+    doc.text(t("reportFooter")+" · "+new Date().toLocaleDateString(lang==="en"?"en-US":"es-MX"),M,y);
+
+    doc.save("centinela-reporte-"+reportWeekStartISO(off)+".pdf");
+  }catch(e){
+    alert(t("pdfError")+e.message);
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML=prevLabel;}
+  }
+}
+
 function adminView(){
-  const tzOpts=TZS.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join("");
-  const wsOpts=DAYS.map((d,i)=>'<option value="'+i+'">'+d+'</option>').join("");
-  let form='<div class="card"><h3 style="margin-bottom:12px">Añadir jugador</h3>'+
+  const tzOpts=TZS.map(row=>'<option value="'+row[0]+'">'+(lang==="en"?row[2]:row[1])+'</option>').join("");
+  const wsOpts=DAYS().map((d,i)=>'<option value="'+i+'">'+d+'</option>').join("");
+  let form='<div class="card"><h3 style="margin-bottom:12px">'+t("addPlayer")+'</h3>'+
     '<div class="grid2">'+
-    '<div class="field"><label>Nombre para mostrar</label><input id="f_name" placeholder="Ej. Aria"></div>'+
-    '<div class="field"><label>Clave API de GW2</label><input id="f_key" placeholder="Pega aquí la clave"></div></div>'+
+    '<div class="field"><label>'+t("displayName")+'</label><input id="f_name" placeholder="'+t("displayNameEx")+'"></div>'+
+    '<div class="field"><label>'+t("apiKey")+'</label><input id="f_key" placeholder="'+t("apiKeyEx")+'"></div></div>'+
     '<div class="grid2">'+
-    '<div class="field"><label>País / región</label><select id="f_tz">'+tzOpts+'</select></div>'+
-    '<div class="field"><label>Primer día laboral</label><select id="f_ws">'+wsOpts+'</select></div></div>'+
-    '<button id="addbtn" class="btn" onclick="addPlayer()">Validar y añadir</button>'+
+    '<div class="field"><label>'+t("country")+'</label><select id="f_tz">'+tzOpts+'</select></div>'+
+    '<div class="field"><label>'+t("firstWorkday")+'</label><select id="f_ws">'+wsOpts+'</select></div></div>'+
+    '<button id="addbtn" class="btn" onclick="addPlayer()">'+t("validateAdd")+'</button>'+
     '<div id="addmsg" class="note" style="margin-top:8px"></div>'+
-    '<p class="note" style="margin-top:6px">La clave se valida con GW2 y se guarda escondida; nadie puede volver a leerla desde aquí.</p></div>';
+    '<p class="note" style="margin-top:6px">'+t("addNote")+'</p></div>';
   if(state.addMsg)form='<div class="card"><div class="'+(state.addMsg.err?"err":"ok")+'">'+esc(state.addMsg.text)+'</div></div>'+form;
 
   let rows="";
   for(const p of state.players){
-    const wsSel=DAYS.map((d,i)=>'<option value="'+i+'"'+(i===p.week_start_day?" selected":"")+'>'+d+'</option>').join("");
+    const wsSel=DAYS().map((d,i)=>'<option value="'+i+'"'+(i===p.week_start_day?" selected":"")+'>'+d+'</option>').join("");
     const tz=playerTZ(p);
     if(state.editing===p.id){
-      const tzEditOpts=TZS.map(t=>'<option value="'+t[0]+'"'+(t[0]===tz?" selected":"")+'>'+t[1]+'</option>').join("");
+      const tzEditOpts=TZS.map(row=>'<option value="'+row[0]+'"'+(row[0]===tz?" selected":"")+'>'+(lang==="en"?row[2]:row[1])+'</option>').join("");
       rows+='<tr class="edit-row"><td colspan="5" style="padding:10px 8px">'+
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
         '<input id="edit_name" value="'+esc(p.friendly_name)+'" style="width:160px">'+
         '<select id="edit_tz" style="width:260px">'+tzEditOpts+'</select>'+
-        '<button class="btn sm" onclick="saveEdit(\''+p.id+'\')">Guardar</button>'+
-        '<button class="btn ghost sm" onclick="cancelEdit()">Cancelar</button>'+
+        '<button class="btn sm" onclick="saveEdit(\''+p.id+'\')">'+t("save")+'</button>'+
+        '<button class="btn ghost sm" onclick="cancelEdit()">'+t("cancel")+'</button>'+
         '</div></td></tr>';
     }else{
       rows+='<tr class="'+(p.active?"":"off")+'">'+
         '<td><b>'+esc(p.friendly_name)+'</b><div class="c-acct">'+esc(p.account_name||"—")+'</div></td>'+
         '<td>'+esc(tzLabel(tz))+'</td>'+
         '<td><select class="wsmini" onchange="changeWs(\''+p.id+'\',this.value)">'+wsSel+'</select></td>'+
-        '<td><span class="pill '+(p.active?"on":"off")+'">'+(p.active?"activo":"inactivo")+'</span></td>'+
+        '<td><span class="pill '+(p.active?"on":"off")+'">'+(p.active?t("active"):t("inactive"))+'</span></td>'+
         '<td style="text-align:right;white-space:nowrap">'+
-        '<button class="btn ghost sm" onclick="startEdit(\''+p.id+'\')">Editar</button> '+
-        '<button class="btn ghost sm" onclick="toggleActive(\''+p.id+'\','+p.active+')">'+(p.active?"Pausar":"Reactivar")+'</button> '+
-        '<button class="btn danger sm" onclick="delPlayer(\''+p.id+'\',\''+esc(p.friendly_name).replace(/'/g,"")+'\')">Eliminar</button></td></tr>';
+        '<button class="btn ghost sm" onclick="startEdit(\''+p.id+'\')">'+t("edit")+'</button> '+
+        '<button class="btn ghost sm" onclick="toggleActive(\''+p.id+'\','+p.active+')">'+(p.active?t("pause"):t("reactivate"))+'</button> '+
+        '<button class="btn danger sm" onclick="delPlayer(\''+p.id+'\',\''+esc(p.friendly_name).replace(/'/g,"")+'\')">'+t("delete")+'</button></td></tr>';
     }
   }
   const table=state.players.length?
-    '<div class="card"><h3 style="margin-bottom:10px">Jugadores</h3>'+
-    '<table><thead><tr><th>Jugador</th><th>País / zona</th><th>Inicio semana</th><th>Estado</th><th></th></tr></thead>'+
+    '<div class="card"><h3 style="margin-bottom:10px">'+t("playersTable")+'</h3>'+
+    '<table><thead><tr><th>'+t("colPlayer")+'</th><th>'+t("colCountry")+'</th><th>'+t("colWeekStart")+'</th><th>'+t("colStatus")+'</th><th></th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>'
-    :'<div class="card"><div class="empty">Todavía no hay jugadores registrados.</div></div>';
+    :'<div class="card"><div class="empty">'+t("noPlayersYet")+'</div></div>';
   return form+table;
 }
 
