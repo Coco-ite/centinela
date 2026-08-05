@@ -9,9 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --parchment:#F3EDE2;--card:#FBF8F2;--ink:#26231D;--soft:#6B6457;
-    --copper:#B5532B;--copper-d:#984321;--emerald:#3B7A4E;--brick:#AE382D;
-    --amber:#C98A2B;--line:#E2D8C8;--muted:#EDE6D8;
+    --parchment:#F1EEFF;--card:#FFFFFF;--ink:#181530;--soft:#635F7D;
+    --copper:#7C3AED;--copper-d:#6425C9;--emerald:#12C48B;--brick:#FF3B5C;
+    --amber:#FFB020;--line:#E2DBFA;--muted:#EDE7FC;
+    --almost:#00B4D8;--almost-bg:#DFF7FC;--almost-border:#A6E8F5;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--parchment);color:var(--ink);font-family:"Hanken Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -31,8 +32,8 @@
   .btn.ghost{background:transparent;color:var(--soft);border:1px solid var(--line)}
   .btn.ghost:hover{background:var(--muted);color:var(--ink)}
   .btn.sm{padding:5px 10px;font-size:13px;border-radius:7px}
-  .btn.danger{background:transparent;color:var(--brick);border:1px solid #E6C4be}
-  .btn.danger:hover{background:#FBEEEC}
+  .btn.danger{background:transparent;color:var(--brick);border:1px solid #FFD3DC}
+  .btn.danger:hover{background:#FFE7EC}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
   label{display:block;font-size:12px;font-weight:600;color:var(--soft);margin:0 0 4px}
   input,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;font:inherit;color:var(--ink)}
@@ -53,21 +54,22 @@
   .toolbar .search{flex:1;max-width:240px;margin-left:auto;padding:7px 11px;font-size:13px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
   .card2{text-align:left;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:15px 17px;cursor:pointer;font:inherit;color:inherit;transition:border-color .12s,box-shadow .12s;width:100%}
-  .card2:hover{border-color:var(--copper);box-shadow:0 3px 12px rgba(38,35,29,.07)}
+  .card2:hover{border-color:var(--copper);box-shadow:0 3px 12px rgba(24,21,48,.09)}
   .card2.lv-att{border-left-color:var(--brick)} .card2.lv-hoy{border-left-color:var(--amber)}
   .card2.lv-ok{border-left-color:var(--emerald)} .card2.lv-none{border-left-color:var(--line)}
   .c-top{display:flex;align-items:flex-start;gap:8px;justify-content:space-between}
   .c-name{font-family:"Bricolage Grotesque";font-weight:700;font-size:16px}
   .c-acct{font-size:12px;color:var(--soft);margin-top:2px}
   .st{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex:none}
-  .st.att{background:#FBEEEC;color:var(--brick)} .st.hoy{background:#FBF1DF;color:var(--amber)}
-  .st.ok{background:#EAF3EC;color:var(--emerald)} .st.none{background:var(--muted);color:var(--soft)}
+  .st.att{background:#FFE7EC;color:var(--brick)} .st.hoy{background:#FFF3DC;color:var(--amber)}
+  .st.ok{background:#E1FAF0;color:var(--emerald)} .st.none{background:var(--muted);color:var(--soft)}
   .strip{display:flex;gap:5px;margin:13px 0 11px}
   .seg{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#fff;border:1px solid var(--line);color:var(--soft)}
   .seg.ok{background:var(--emerald);color:#fff;border-color:var(--emerald)}
   .seg.no{background:var(--brick);color:#fff;border-color:var(--brick)}
-  .seg.cur{background:#FBF1DF;color:var(--amber);border-color:#EAD7AE}
-  .seg.next{opacity:.45} .seg.part{color:#B9AE9C}
+  .seg.almost{background:var(--almost-bg);color:var(--almost);border-color:var(--almost-border);font-weight:800}
+  .seg.cur{background:#FFF3DC;color:var(--amber);border-color:#FFDDA0}
+  .seg.next{opacity:.45} .seg.part{color:#A79FC7}
   .c-bot{font-size:13px;color:var(--soft)} .c-bot b{font-family:"Bricolage Grotesque";color:var(--ink);font-size:15px}
   .back{background:none;border:0;color:var(--soft);font:inherit;font-weight:600;cursor:pointer;padding:2px 0;margin-bottom:10px}
   .back:hover{color:var(--ink)}
@@ -85,8 +87,11 @@
   td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
   tr.off td{opacity:.5}
   .pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
-  .pill.on{background:#EAF3EC;color:var(--emerald)} .pill.off{background:var(--muted);color:var(--soft)}
+  .pill.on{background:#E1FAF0;color:var(--emerald)} .pill.off{background:var(--muted);color:var(--soft)}
   .wsmini{width:auto;padding:4px 8px;font-size:13px;border-radius:7px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--soft);margin:2px 0 14px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
   .loginbox{width:100%;max-width:380px}
   .edit-row input,.edit-row select{padding:5px 8px;font-size:13px;border-radius:7px;width:auto}
   @media(max-width:560px){.grid2,.stats{grid-template-columns:1fr}}
@@ -123,7 +128,12 @@ const I18N={
     back:"← Volver al resumen",laborales:"laborales",
     weekPrev:"← Anterior",weekNext:"Siguiente →",thisWeek:"esta semana",
     minutesPerDay:"Minutos por día",
-    chartNote:"La línea cobre marca la meta de 1 hora. Los días de descanso no exigen tiempo.",
+    chartNote:"La línea punteada marca la meta de 1 hora. Los cuadros turquesa son días con 50–59 minutos: cerca de la meta, aunque no cuentan como cumplidos. Los días de descanso no exigen tiempo.",
+    legendTitle:"Cómo leer los colores",
+    legendOk:"Cumplió (60+ min)",
+    legendAlmost:"Cerca de la meta (50–59 min)",
+    legendNo:"No cumplió (menos de 50 min)",
+    legendPending:"Pendiente hoy",
     weeklyCompliance:"Cumplimiento por semana (últimas 6)",
     statThisWeek:"Esta semana",statStreak:"Racha actual",statTotal:"Tiempo total en GW2",
     day:"día",days:"días",
@@ -152,7 +162,7 @@ const I18N={
     downloadPdf:"Descargar PDF",generating:"Generando…",
     reportRange:"Semana",reportGeneratedOn:"Generado el",
     reportPlayersLbl:"Jugadores",reportNeedAtt:"Necesitan atención",reportOnTrack:"Al día",
-    reportMethodology:"Metodología: los minutos jugados de un día = tiempo acumulado al final de ese día menos el del día anterior. Cada día laboral se evalúa por separado (se necesita al menos 1 hora); los días de descanso no exigen tiempo. Cada jugador se evalúa según su propio calendario laboral, por lo que el rango de fechas es una referencia general.",
+    reportMethodology:"Metodología: los minutos jugados de un día = tiempo acumulado al final de ese día menos el del día anterior. Cada día laboral se evalúa por separado (se necesita al menos 1 hora); los días de descanso no exigen tiempo. Los días en turquesa alcanzaron entre 50 y 59 minutos: no cumplen la meta formal, pero están cerca —muchas veces esos minutos se van en iniciar sesión y entrar al juego— por lo que se muestran distinto de un día realmente sin actividad. Cada jugador se evalúa según su propio calendario laboral, por lo que el rango de fechas es una referencia general.",
     reportFooter:"Generado automáticamente por Centinela",
     pdfError:"No se pudo generar el PDF: "
   },
@@ -174,7 +184,12 @@ const I18N={
     back:"← Back to overview",laborales:"workdays",
     weekPrev:"← Previous",weekNext:"Next →",thisWeek:"this week",
     minutesPerDay:"Minutes per day",
-    chartNote:"The copper line marks the 1-hour goal. Rest days don't require any time.",
+    chartNote:"The dashed line marks the 1-hour goal. Teal squares are days with 50–59 minutes: close to the goal, even though they don't count as met. Rest days don't require any time.",
+    legendTitle:"How to read the colors",
+    legendOk:"Met (60+ min)",
+    legendAlmost:"Close to goal (50–59 min)",
+    legendNo:"Not met (under 50 min)",
+    legendPending:"Pending today",
     weeklyCompliance:"Weekly compliance (last 6)",
     statThisWeek:"This week",statStreak:"Current streak",statTotal:"Total time in GW2",
     day:"day",days:"days",
@@ -203,7 +218,7 @@ const I18N={
     downloadPdf:"Download PDF",generating:"Generating…",
     reportRange:"Week",reportGeneratedOn:"Generated on",
     reportPlayersLbl:"Players",reportNeedAtt:"Need attention",reportOnTrack:"On track",
-    reportMethodology:"Methodology: a day's minutes played = cumulative time at that day's end minus the previous day's. Each workday is judged independently (at least 1 hour is required); rest days don't require any time. Each player is evaluated on their own work calendar, so the date range is a general reference.",
+    reportMethodology:"Methodology: a day's minutes played = cumulative time at that day's end minus the previous day's. Each workday is judged independently (at least 1 hour is required); rest days don't require any time. Teal days reached 50 to 59 minutes: they don't meet the formal goal, but they're close — often those minutes go into logging in and loading into the game — so they're shown differently from a day with real zero activity. Each player is evaluated on their own work calendar, so the date range is a general reference.",
     reportFooter:"Automatically generated by Centinela",
     pdfError:"Couldn't generate the PDF: "
   }
@@ -284,6 +299,7 @@ function statusFor(p,da,s){
   if(r.partial)return{k:"part",min:null,working};
   if(r.min>=60)return{k:"ok",min:r.min,working};
   if(s===today)return{k:"cur",min:r.min,working};
+  if(r.min>=50)return{k:"almost",min:r.min,working};
   return{k:"no",min:r.min,working};
 }
 function weekData(p,off){
@@ -294,7 +310,7 @@ function weekData(p,off){
   const days=[];for(let i=0;i<7;i++){const d=addDays(weekStart,i);days.push({date:d,st:statusFor(p,da,d)});}
   let met=0,missed=0,todayPending=false;
   for(const o of days){if(!o.st.working)continue;
-    if(o.date<today){if(o.st.k==="ok")met++;else if(o.st.k==="no")missed++;}
+    if(o.date<today){if(o.st.k==="ok")met++;else if(o.st.k==="no"||o.st.k==="almost")missed++;}
     else if(o.date===today){if(o.st.k==="ok")met++;else if(o.st.k==="no")missed++;else todayPending=true;}
   }
   let level=missed>0?"atencion":(todayPending?"hoy":"aldia");
@@ -417,36 +433,36 @@ function minutesChart(days){
   const y=v=>pT+iH-(v/sMax*iH),gY=y(60);let g="";
   days.forEach((d,i)=>{
     const cx=pL+slot*i+slot/2,m=d.st.min;
-    const col=d.st.k==="ok"?"#3B7A4E":d.st.k==="no"?"#AE382D":d.st.k==="cur"?"#C98A2B":(d.st.working?"#D9CDBA":"#EAE0CF");
+    const col=d.st.k==="ok"?"var(--emerald)":d.st.k==="no"?"var(--brick)":d.st.k==="almost"?"var(--almost)":d.st.k==="cur"?"var(--amber)":(d.st.working?"var(--line)":"var(--muted)");
     if(m!=null&&m>0){const by=y(m),bh=pT+iH-by;
       g+='<rect x="'+(cx-bW/2)+'" y="'+by+'" width="'+bW+'" height="'+bh+'" rx="4" fill="'+col+'"/>';
-      g+='<text x="'+cx+'" y="'+(by-5)+'" text-anchor="middle" font-size="11" fill="#6B6457">'+fmt(m)+'</text>';
+      g+='<text x="'+cx+'" y="'+(by-5)+'" text-anchor="middle" font-size="11" fill="var(--soft)">'+fmt(m)+'</text>';
     }else{
       const lbl=d.st.working?(d.st.k==="next"?"·":(d.st.k==="part"?(lang==="en"?"n/d":"s/d"):"0")):(lang==="en"?"rest":"descanso");
-      g+='<text x="'+cx+'" y="'+(pT+iH-6)+'" text-anchor="middle" font-size="10" fill="#B9AE9C">'+lbl+'</text>';
+      g+='<text x="'+cx+'" y="'+(pT+iH-6)+'" text-anchor="middle" font-size="10" fill="var(--soft)">'+lbl+'</text>';
     }
-    g+='<text x="'+cx+'" y="'+(H-17)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#26231D">'+DAYS()[dow(d.date)]+'</text>';
-    g+='<text x="'+cx+'" y="'+(H-4)+'" text-anchor="middle" font-size="9" fill="#6B6457">'+ddmm(d.date)+'</text>';
+    g+='<text x="'+cx+'" y="'+(H-17)+'" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">'+DAYS()[dow(d.date)]+'</text>';
+    g+='<text x="'+cx+'" y="'+(H-4)+'" text-anchor="middle" font-size="9" fill="var(--soft)">'+ddmm(d.date)+'</text>';
   });
-  g+='<line x1="'+pL+'" y1="'+gY+'" x2="'+(W-pR)+'" y2="'+gY+'" stroke="#B5532B" stroke-width="1.5" stroke-dasharray="4 4" opacity=".7"/>';
-  g+='<text x="'+(W-pR)+'" y="'+(gY-4)+'" text-anchor="end" font-size="9" fill="#B5532B">'+(lang==="en"?"1h goal":"meta 1 h")+'</text>';
+  g+='<line x1="'+pL+'" y1="'+gY+'" x2="'+(W-pR)+'" y2="'+gY+'" stroke="var(--copper)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".7"/>';
+  g+='<text x="'+(W-pR)+'" y="'+(gY-4)+'" text-anchor="end" font-size="9" fill="var(--copper)">'+(lang==="en"?"1h goal":"meta 1 h")+'</text>';
   return'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto" font-family="Hanken Grotesk">'+g+'</svg>';
 }
 function trendChart(weeks){
   const W=720,H=165,pL=10,pR=10,pT=20,pB=34,n=weeks.length;
   const iW=W-pL-pR,iH=H-pT-pB,slot=iW/n,bW=Math.min(42,slot*0.5);
-  const y=v=>pT+iH-(v/5*iH);let g='<line x1="'+pL+'" y1="'+(pT+iH)+'" x2="'+(W-pR)+'" y2="'+(pT+iH)+'" stroke="#E2D8C8"/>';
+  const y=v=>pT+iH-(v/5*iH);let g='<line x1="'+pL+'" y1="'+(pT+iH)+'" x2="'+(W-pR)+'" y2="'+(pT+iH)+'" stroke="var(--line)"/>';
   weeks.forEach((w,i)=>{
-    const cx=pL+slot*i+slot/2,col=w.met>=5?"#3B7A4E":w.met>=3?"#C98A2B":"#AE382D";
+    const cx=pL+slot*i+slot/2,col=w.met>=5?"var(--emerald)":w.met>=3?"var(--amber)":"var(--brick)";
     const by=y(w.met),bh=Math.max(2,pT+iH-by);
     g+='<rect x="'+(cx-bW/2)+'" y="'+by+'" width="'+bW+'" height="'+bh+'" rx="4" fill="'+col+'"/>';
-    g+='<text x="'+cx+'" y="'+(by-5)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#26231D">'+w.met+'/5</text>';
-    g+='<text x="'+cx+'" y="'+(H-4)+'" text-anchor="middle" font-size="9" fill="#6B6457">'+ddmm(w.start)+'</text>';
+    g+='<text x="'+cx+'" y="'+(by-5)+'" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">'+w.met+'/5</text>';
+    g+='<text x="'+cx+'" y="'+(H-4)+'" text-anchor="middle" font-size="9" fill="var(--soft)">'+ddmm(w.start)+'</text>';
   });
   return'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto" font-family="Hanken Grotesk">'+g+'</svg>';
 }
 
-const LOGO='<svg class="logo" viewBox="0 0 48 48" fill="none"><path d="M24 4l16 6v11c0 11-7 18-16 23-9-5-16-12-16-23V10l16-6z" fill="#B5532B"/><path d="M24 13v22M15 21l9-8 9 8" stroke="#F3EDE2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const LOGO='<svg class="logo" viewBox="0 0 48 48" fill="none"><path d="M24 4l16 6v11c0 11-7 18-16 23-9-5-16-12-16-23V10l16-6z" fill="var(--copper)"/><path d="M24 13v22M15 21l9-8 9 8" stroke="var(--parchment)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function render(){
   const app=document.getElementById("app");
@@ -483,8 +499,9 @@ function pillFor(level){
 }
 function weekStrip(days){
   return days.filter(d=>d.st.working).map(d=>{
-    const c=d.st.k==="ok"?"ok":d.st.k==="no"?"no":d.st.k==="cur"?"cur":d.st.k==="next"?"next":d.st.k==="part"?"part":"";
-    return'<span class="seg '+c+'">'+DAYS()[dow(d.date)][0]+'</span>';
+    const c=d.st.k==="ok"?"ok":d.st.k==="no"?"no":d.st.k==="almost"?"almost":d.st.k==="cur"?"cur":d.st.k==="next"?"next":d.st.k==="part"?"part":"";
+    const title=d.st.k==="almost"?' title="'+fmt(d.st.min)+'"':"";
+    return'<span class="seg '+c+'"'+title+'>'+DAYS()[dow(d.date)][0]+'</span>';
   }).join("");
 }
 
@@ -565,6 +582,12 @@ function reportesView(){
     '<div class="stat"><div class="lab">'+t("reportNeedAtt")+'</div><div class="val" style="color:var(--brick)">'+att+'</div></div>'+
     '<div class="stat"><div class="lab">'+t("reportOnTrack")+'</div><div class="val" style="color:var(--emerald)">'+ok+'</div></div>'+
     '</div>';
+  const legend='<div class="legend"><span style="color:var(--ink);font-weight:600">'+t("legendTitle")+':</span>'+
+    '<span><i style="background:var(--emerald)"></i>'+t("legendOk")+'</span>'+
+    '<span><i style="background:var(--almost)"></i>'+t("legendAlmost")+'</span>'+
+    '<span><i style="background:var(--brick)"></i>'+t("legendNo")+'</span>'+
+    '<span><i style="background:var(--amber)"></i>'+t("legendPending")+'</span>'+
+    '</div>';
   let rows="";
   for(const row of list){
     const p=row.p,w=row.w;
@@ -580,7 +603,7 @@ function reportesView(){
     '<div class="card"><table><thead><tr><th>'+t("colPlayer")+'</th><th>'+t("colCountry")+'</th><th>'+t("colDays")+'</th><th>'+t("colMet")+'</th><th>'+t("colStatus")+'</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>'
     :'<div class="card"><div class="empty">'+t("emptyPlayers")+'</div></div>';
-  return head+weeknav+stats+table+
+  return head+weeknav+stats+legend+table+
     '<p class="note" style="margin-top:10px">'+t("reportMethodology")+'</p>';
 }
 
@@ -603,7 +626,7 @@ async function downloadReportPDF(){
     const ok=list.filter(x=>x.w.level==="aldia").length;
     const range=reportWeekLabel(off);
 
-    doc.setFillColor(181,83,43);
+    doc.setFillColor(124,58,237);
     doc.rect(0,0,W,86,"F");
     doc.setTextColor(255,255,255);
     doc.setFont("helvetica","bold");doc.setFontSize(20);
@@ -618,21 +641,39 @@ async function downloadReportPDF(){
 
     let y=116;
     const statBoxes=[
-      {label:t("reportPlayersLbl"),value:String(active.length),color:[38,35,29]},
-      {label:t("reportNeedAtt"),value:String(att),color:[174,56,45]},
-      {label:t("reportOnTrack"),value:String(ok),color:[59,122,78]}
+      {label:t("reportPlayersLbl"),value:String(active.length),color:[23,20,43]},
+      {label:t("reportNeedAtt"),value:String(att),color:[255,59,92]},
+      {label:t("reportOnTrack"),value:String(ok),color:[18,196,139]}
     ];
     const gap=14,boxW=(W-2*M-2*gap)/3,boxH=58;
     statBoxes.forEach((s,i)=>{
       const x=M+i*(boxW+gap);
-      doc.setFillColor(251,248,242);doc.setDrawColor(226,216,200);
+      doc.setFillColor(247,245,253);doc.setDrawColor(228,223,247);
       doc.roundedRect(x,y,boxW,boxH,6,6,"FD");
-      doc.setTextColor(107,100,87);doc.setFont("helvetica","normal");doc.setFontSize(9);
+      doc.setTextColor(99,95,125);doc.setFont("helvetica","normal");doc.setFontSize(9);
       doc.text(s.label,x+14,y+22);
       doc.setTextColor(s.color[0],s.color[1],s.color[2]);doc.setFont("helvetica","bold");doc.setFontSize(22);
       doc.text(s.value,x+14,y+46);
     });
-    y+=boxH+26;
+    y+=boxH+22;
+
+    const legendItems=[
+      {label:t("legendOk"),color:[18,196,139]},
+      {label:t("legendAlmost"),color:[0,180,216]},
+      {label:t("legendNo"),color:[255,59,92]},
+      {label:t("legendPending"),color:[255,176,32]}
+    ];
+    let lx=M;
+    doc.setFontSize(8.5);
+    legendItems.forEach(it=>{
+      doc.setFillColor(it.color[0],it.color[1],it.color[2]);
+      doc.roundedRect(lx,y,10,10,2,2,"F");
+      doc.setTextColor(99,95,125);doc.setFont("helvetica","normal");
+      const tw=doc.getTextWidth(it.label);
+      doc.text(it.label,lx+14,y+8);
+      lx+=14+tw+18;
+    });
+    y+=26;
 
     const cols=[
       {w:0.30,label:t("colPlayer")},
@@ -646,21 +687,21 @@ async function downloadReportPDF(){
     const colX=cols.map(c=>{const x=cx;cx+=c.w*tableW;return x;});
 
     function drawTableHeader(){
-      doc.setFillColor(237,230,216);
+      doc.setFillColor(237,232,252);
       doc.rect(M,y,tableW,24,"F");
-      doc.setTextColor(38,35,29);doc.setFont("helvetica","bold");doc.setFontSize(9);
+      doc.setTextColor(23,20,43);doc.setFont("helvetica","bold");doc.setFontSize(9);
       cols.forEach((c,i)=>doc.text(c.label.toUpperCase(),colX[i]+10,y+16));
       y+=24;
     }
     drawTableHeader();
 
     const rowH=44;
-    const dayColors={ok:[59,122,78],no:[174,56,45],cur:[201,138,43],next:[217,205,186],part:[185,174,156]};
+    const dayColors={ok:[18,196,139],no:[255,59,92],almost:[0,180,216],cur:[255,176,32],next:[225,220,247],part:[167,159,199]};
     const pillColors={
-      atencion:{bg:[251,238,236],fg:[174,56,45],label:t("pillAtt")},
-      hoy:{bg:[251,241,223],fg:[201,138,43],label:t("pillHoy")},
-      sindatos:{bg:[237,230,216],fg:[107,100,87],label:t("pillNone")},
-      aldia:{bg:[234,243,236],fg:[59,122,78],label:t("pillOk")}
+      atencion:{bg:[255,227,233],fg:[255,59,92],label:t("pillAtt")},
+      hoy:{bg:[255,243,220],fg:[255,176,32],label:t("pillHoy")},
+      sindatos:{bg:[237,232,252],fg:[99,95,125],label:t("pillNone")},
+      aldia:{bg:[225,250,240],fg:[18,196,139],label:t("pillOk")}
     };
 
     list.forEach((row,idx)=>{
@@ -669,21 +710,21 @@ async function downloadReportPDF(){
         y=M;
         drawTableHeader();
       }
-      if(idx%2===1){doc.setFillColor(251,248,242);doc.rect(M,y,tableW,rowH,"F");}
+      if(idx%2===1){doc.setFillColor(247,245,253);doc.rect(M,y,tableW,rowH,"F");}
       const p=row.p,w=row.w;
-      doc.setTextColor(38,35,29);doc.setFont("helvetica","bold");doc.setFontSize(11);
+      doc.setTextColor(23,20,43);doc.setFont("helvetica","bold");doc.setFontSize(11);
       doc.text(String(p.friendly_name||"—"),colX[0]+10,y+19);
-      doc.setTextColor(107,100,87);doc.setFont("helvetica","normal");doc.setFontSize(9);
+      doc.setTextColor(99,95,125);doc.setFont("helvetica","normal");doc.setFontSize(9);
       doc.text(String(p.account_name||"—"),colX[0]+10,y+33);
 
-      doc.setTextColor(38,35,29);doc.setFontSize(9);
+      doc.setTextColor(23,20,43);doc.setFontSize(9);
       const tzLines=doc.splitTextToSize(tzLabel(playerTZ(p)),cols[1].w*tableW-16);
       doc.text(tzLines,colX[1]+10,y+rowH/2-(tzLines.length-1)*5+3);
 
       let dx=colX[2]+10;
       const dSize=14,dGap=3;
       w.days.filter(d=>d.st.working).forEach(d=>{
-        const col=d.st.k==="ok"?dayColors.ok:d.st.k==="no"?dayColors.no:d.st.k==="cur"?dayColors.cur:d.st.k==="next"?dayColors.next:d.st.k==="part"?dayColors.part:[217,205,186];
+        const col=d.st.k==="ok"?dayColors.ok:d.st.k==="no"?dayColors.no:d.st.k==="almost"?dayColors.almost:d.st.k==="cur"?dayColors.cur:d.st.k==="next"?dayColors.next:d.st.k==="part"?dayColors.part:[225,220,247];
         doc.setFillColor(col[0],col[1],col[2]);
         doc.roundedRect(dx,y+rowH/2-dSize/2,dSize,dSize,3,3,"F");
         doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(7);
@@ -691,7 +732,7 @@ async function downloadReportPDF(){
         dx+=dSize+dGap;
       });
 
-      doc.setTextColor(38,35,29);doc.setFont("helvetica","bold");doc.setFontSize(12);
+      doc.setTextColor(23,20,43);doc.setFont("helvetica","bold");doc.setFontSize(12);
       doc.text(w.met+"/5",colX[3]+10,y+rowH/2+4);
 
       const pc=pillColors[w.level];
@@ -702,13 +743,13 @@ async function downloadReportPDF(){
       doc.text(pc.label,colX[4]+8+pillW/2,y+rowH/2+3,{align:"center"});
 
       y+=rowH;
-      doc.setDrawColor(226,216,200);
+      doc.setDrawColor(228,223,247);
       doc.line(M,y,M+tableW,y);
     });
 
     y+=22;
     if(y>H-70){doc.addPage();y=M;}
-    doc.setTextColor(107,100,87);doc.setFont("helvetica","normal");doc.setFontSize(8);
+    doc.setTextColor(99,95,125);doc.setFont("helvetica","normal");doc.setFontSize(8);
     const noteLines=doc.splitTextToSize(t("reportMethodology"),tableW);
     doc.text(noteLines,M,y);
     y+=noteLines.length*10+12;
