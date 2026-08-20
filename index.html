@@ -572,7 +572,7 @@ function playerSelfView(){
   const range=ddmm(w.weekStart)+" – "+ddmm(addDays(w.weekStart,6));
   const trend=weeklyTrend(p,6),streak=currentStreak(p),th=totalHours(p);
   return'<div class="wrap" style="max-width:640px">'+
-    '<div class="top">'+LOGO+'<div><div class="eyebrow">Centinela</div><h1>'+t("playerWelcome",{name:p.friendly_name})+'</h1></div>'+
+    '<div class="top">'+LOGO+'<div><div class="eyebrow">Centinela</div><h1>'+esc(t("playerWelcome",{name:p.friendly_name}))+'</h1></div>'+
     '<div class="userbar">'+langToggle()+'<button class="btn ghost sm" onclick="playerLogout()">'+t("btnLogout")+'</button></div></div>'+
     '<div class="card"><div class="dhead"><div><div class="dmeta">'+esc(p.account_name||"—")+' · '+esc(tzLabel(playerTZ(p)))+' · '+t("laborales")+' '+workLabel+'</div></div>'+pillFor(w.level)+'</div></div>'+
     '<div class="weeknav"><button class="btn ghost sm" onclick="prevWeek()">'+t("weekPrev")+'</button>'+
