@@ -154,6 +154,21 @@ const I18N={
     noPlayersYet:"Todavía no hay jugadores registrados.",
     deleteConfirm:"¿Eliminar a {name}? Se borrarán su clave y su historial. No se puede deshacer.",
     nameEmpty:"El nombre no puede estar vacío.",
+    pinSet:"PIN asignado",
+    pinNotSet:"Sin PIN",
+    pinGenBtn:"Generar PIN",
+    pinRegenBtn:"Regenerar PIN",
+    pinRegenConfirm:"¿Generar un PIN nuevo? El anterior dejará de funcionar.",
+    pinGenErr:"No se pudo generar el PIN: ",
+    pinGeneratedMsg:"PIN para {name}: {pin}\n\nCompártelo con el jugador. No podrás volver a verlo, pero puedes generar uno nuevo cuando quieras.",
+    playerLoginToggle:"¿Eres jugador? Ingresa tu PIN",
+    playerLoginTitle:"Mi semana",
+    playerPinLabel:"Tu PIN",
+    playerPinPh:"······",
+    playerLoginBtn:"Ver mis horas",
+    playerPinErr:"PIN incorrecto. Pídele uno nuevo a tu administrador.",
+    playerWelcome:"Hola, {name}",
+    backToAdminLogin:"¿Eres administrador? Inicia sesión aquí",
     keyInvalid:'La clave no es válida o le falta el permiso "account".',
     keyCheckErr:"No se pudo verificar la clave. Intenta otra vez.",
     keyConnErr:"Error de conexión al verificar la clave.",
@@ -210,6 +225,21 @@ const I18N={
     noPlayersYet:"No players registered yet.",
     deleteConfirm:"Delete {name}? Their key and history will be erased. This can't be undone.",
     nameEmpty:"Name can't be empty.",
+    pinSet:"PIN assigned",
+    pinNotSet:"No PIN",
+    pinGenBtn:"Generate PIN",
+    pinRegenBtn:"Regenerate PIN",
+    pinRegenConfirm:"Generate a new PIN? The old one will stop working.",
+    pinGenErr:"Couldn't generate the PIN: ",
+    pinGeneratedMsg:"PIN for {name}: {pin}\n\nShare it with the player. You won't be able to see it again, but you can generate a new one anytime.",
+    playerLoginToggle:"Are you a player? Enter your PIN",
+    playerLoginTitle:"My week",
+    playerPinLabel:"Your PIN",
+    playerPinPh:"······",
+    playerLoginBtn:"See my hours",
+    playerPinErr:"Wrong PIN. Ask your admin for a new one.",
+    playerWelcome:"Hi, {name}",
+    backToAdminLogin:"Are you an admin? Sign in here",
     keyInvalid:'The key is invalid or missing the "account" permission.',
     keyCheckErr:"Couldn't verify the key. Try again.",
     keyConnErr:"Connection error while verifying the key.",
@@ -340,7 +370,7 @@ function reportWeekLabel(off){
 
 let state={session:null,view:"resumen",selected:null,weekOffset:0,reportOffset:0,filter:"todos",search:"",
            players:[],schedules:[],snaps:[],loading:true,addMsg:null,lastSync:null,
-           editing:null};
+           editing:null,mode:"admin",playerLoggedIn:false};
 
 async function loadAll(){
   state.loading=true;render();
@@ -404,6 +434,13 @@ function startEdit(id){state.editing=id;render();}
 function cancelEdit(){state.editing=null;render();}
 
 async function toggleActive(id,cur){await sb.from("players").update({active:!cur}).eq("id",id);await loadAll();}
+async function genPin(id,name,hasPin){
+  if(hasPin&&!confirm(t("pinRegenConfirm")))return;
+  const res=await sb.rpc("admin_set_player_pin",{p_player_id:id});
+  if(res.error){alert(t("pinGenErr")+res.error.message);return;}
+  alert(t("pinGeneratedMsg",{name:name,pin:res.data}));
+  await loadAll();
+}
 async function delPlayer(id,name){
   if(!confirm(t("deleteConfirm",{name:name})))return;
   await sb.from("players").delete().eq("id",id);await loadAll();
@@ -466,6 +503,7 @@ const LOGO='<svg class="logo" viewBox="0 0 48 48" fill="none"><path d="M24 4l16 
 
 function render(){
   const app=document.getElementById("app");
+  if(state.mode==="player"){app.innerHTML=state.playerLoggedIn?playerSelfView():playerLoginView();return;}
   if(!state.session){app.innerHTML=loginView();return;}
   const body=state.view==="admin"?adminView():state.view==="reportes"?reportesView():state.view==="detalle"?detalleView():resumenView();
   app.innerHTML='<div class="wrap">'+
@@ -488,7 +526,66 @@ function loginView(){
     '<div class="field"><label>'+t("loginPass")+'</label><input id="pass" type="password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')login()"></div>'+
     '<button class="btn" style="width:100%;justify-content:center" onclick="login()">'+t("loginBtn")+'</button>'+
     '<div id="loginerr" class="err"></div></div>'+
-    '<p class="note" style="text-align:center">'+t("loginNote")+'</p></div></div>';
+    '<p class="note" style="text-align:center">'+t("loginNote")+'</p>'+
+    '<p class="note" style="text-align:center;margin-top:6px"><button class="back" style="margin:0" onclick="showPlayerLogin()">'+t("playerLoginToggle")+'</button></p></div></div>';
+}
+
+function showPlayerLogin(){state.mode="player";state.playerLoggedIn=false;render();}
+function backToAdminLogin(){state.mode="admin";render();}
+
+function playerLoginView(){
+  return'<div class="center"><div class="loginbox">'+
+    '<div style="text-align:right;margin-bottom:10px">'+langToggle()+'</div>'+
+    '<div style="text-align:center;margin-bottom:18px">'+LOGO+'<div class="eyebrow" style="margin-top:8px">Centinela</div><h1 style="font-size:24px">'+t("playerLoginTitle")+'</h1></div>'+
+    '<div class="card"><div class="field"><label>'+t("playerPinLabel")+'</label>'+
+    '<input id="ppin" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="'+t("playerPinPh")+'" onkeydown="if(event.key===\'Enter\')doPlayerLogin()"></div>'+
+    '<button class="btn" style="width:100%;justify-content:center" onclick="doPlayerLogin()">'+t("playerLoginBtn")+'</button>'+
+    '<div id="ppinerr" class="err"></div></div>'+
+    '<p class="note" style="text-align:center"><button class="back" style="margin:0" onclick="backToAdminLogin()">'+t("backToAdminLogin")+'</button></p></div></div>';
+}
+
+async function doPlayerLogin(){
+  const pin=document.getElementById("ppin").value.trim();
+  const box=document.getElementById("ppinerr");box.textContent="";
+  if(!pin){box.textContent=t("playerPinErr");return;}
+  const res=await sb.rpc("player_login",{p_pin:pin});
+  if(res.error||!res.data){box.textContent=t("playerPinErr");return;}
+  const d=res.data;
+  state.players=[{id:d.player.id,friendly_name:d.player.friendly_name,account_name:d.player.account_name,
+    timezone:d.player.timezone,tz_offset:d.player.tz_offset,week_start_day:d.player.week_start_day,active:true}];
+  state.schedules=(d.schedules||[]).map(s=>({player_id:d.player.id,week_start_day:s.week_start_day,effective_from:s.effective_from}));
+  state.snaps=(d.snapshots||[]).map(s=>({player_id:d.player.id,captured_at:s.captured_at,age_seconds:s.age_seconds}));
+  state.weekOffset=0;
+  state.playerLoggedIn=true;
+  render();
+}
+
+function playerLogout(){
+  state.mode="admin";state.playerLoggedIn=false;state.players=[];state.schedules=[];state.snaps=[];state.weekOffset=0;
+  render();
+}
+
+function playerSelfView(){
+  const p=state.players[0];
+  const w=weekData(p,state.weekOffset),ws=wsForPlayer(p,w.weekStart);
+  const workLabel=DAYS()[ws]+"–"+DAYS()[(ws+4)%7];
+  const range=ddmm(w.weekStart)+" – "+ddmm(addDays(w.weekStart,6));
+  const trend=weeklyTrend(p,6),streak=currentStreak(p),th=totalHours(p);
+  return'<div class="wrap" style="max-width:640px">'+
+    '<div class="top">'+LOGO+'<div><div class="eyebrow">Centinela</div><h1>'+t("playerWelcome",{name:p.friendly_name})+'</h1></div>'+
+    '<div class="userbar">'+langToggle()+'<button class="btn ghost sm" onclick="playerLogout()">'+t("btnLogout")+'</button></div></div>'+
+    '<div class="card"><div class="dhead"><div><div class="dmeta">'+esc(p.account_name||"—")+' · '+esc(tzLabel(playerTZ(p)))+' · '+t("laborales")+' '+workLabel+'</div></div>'+pillFor(w.level)+'</div></div>'+
+    '<div class="weeknav"><button class="btn ghost sm" onclick="prevWeek()">'+t("weekPrev")+'</button>'+
+    '<span class="rng">'+range+(state.weekOffset===0?" · "+t("thisWeek"):"")+'</span>'+
+    '<button class="btn ghost sm" onclick="nextWeek()" '+(state.weekOffset>=0?"disabled":"")+'>'+t("weekNext")+'</button></div>'+
+    '<div class="card"><div class="ctitle">'+t("minutesPerDay")+'</div>'+minutesChart(w.days)+
+    '<p class="note">'+t("chartNote")+'</p></div>'+
+    '<div class="card"><div class="ctitle">'+t("weeklyCompliance")+'</div>'+trendChart(trend)+'</div>'+
+    '<div class="stats">'+
+    '<div class="stat"><div class="lab">'+t("statThisWeek")+'</div><div class="val">'+w.met+'/5</div></div>'+
+    '<div class="stat"><div class="lab">'+t("statStreak")+'</div><div class="val">'+streak+' '+(streak===1?t("day"):t("days"))+'</div></div>'+
+    '<div class="stat"><div class="lab">'+t("statTotal")+'</div><div class="val">'+(th!=null?(Math.round(th*10)/10)+" h":"—")+'</div></div>'+
+    '</div></div>';
 }
 
 function pillFor(level){
@@ -784,7 +881,7 @@ function adminView(){
     const tz=playerTZ(p);
     if(state.editing===p.id){
       const tzEditOpts=TZS.map(row=>'<option value="'+row[0]+'"'+(row[0]===tz?" selected":"")+'>'+(lang==="en"?row[2]:row[1])+'</option>').join("");
-      rows+='<tr class="edit-row"><td colspan="5" style="padding:10px 8px">'+
+      rows+='<tr class="edit-row"><td colspan="6" style="padding:10px 8px">'+
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
         '<input id="edit_name" value="'+esc(p.friendly_name)+'" style="width:160px">'+
         '<select id="edit_tz" style="width:260px">'+tzEditOpts+'</select>'+
@@ -797,6 +894,8 @@ function adminView(){
         '<td>'+esc(tzLabel(tz))+'</td>'+
         '<td><select class="wsmini" onchange="changeWs(\''+p.id+'\',this.value)">'+wsSel+'</select></td>'+
         '<td><span class="pill '+(p.active?"on":"off")+'">'+(p.active?t("active"):t("inactive"))+'</span></td>'+
+        '<td style="white-space:nowrap"><span class="pill '+(p.access_pin_hash?"on":"off")+'">'+(p.access_pin_hash?t("pinSet"):t("pinNotSet"))+'</span> '+
+        '<button class="btn ghost sm" onclick="genPin(\''+p.id+'\',\''+esc(p.friendly_name).replace(/'/g,"")+'\','+(!!p.access_pin_hash)+')">'+(p.access_pin_hash?t("pinRegenBtn"):t("pinGenBtn"))+'</button></td>'+
         '<td style="text-align:right;white-space:nowrap">'+
         '<button class="btn ghost sm" onclick="startEdit(\''+p.id+'\')">'+t("edit")+'</button> '+
         '<button class="btn ghost sm" onclick="toggleActive(\''+p.id+'\','+p.active+')">'+(p.active?t("pause"):t("reactivate"))+'</button> '+
@@ -805,7 +904,7 @@ function adminView(){
   }
   const table=state.players.length?
     '<div class="card"><h3 style="margin-bottom:10px">'+t("playersTable")+'</h3>'+
-    '<table><thead><tr><th>'+t("colPlayer")+'</th><th>'+t("colCountry")+'</th><th>'+t("colWeekStart")+'</th><th>'+t("colStatus")+'</th><th></th></tr></thead>'+
+    '<table><thead><tr><th>'+t("colPlayer")+'</th><th>'+t("colCountry")+'</th><th>'+t("colWeekStart")+'</th><th>'+t("colStatus")+'</th><th>PIN</th><th></th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>'
     :'<div class="card"><div class="empty">'+t("noPlayersYet")+'</div></div>';
   return form+table;
