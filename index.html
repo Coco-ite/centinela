@@ -376,7 +376,7 @@ let state={session:null,view:"resumen",selected:null,weekOffset:0,reportOffset:0
 async function fetchAllSnapshots(since){
   const pageSize=10000;let from=0,all=[];
   while(true){
-    const res=await sb.from("snapshots").select("player_id,captured_at,age_seconds")
+    const res=await sb.from("daily_snapshots").select("player_id,captured_at,age_seconds")
       .gte("captured_at",since).order("captured_at").range(from,from+pageSize-1);
     if(res.error)return{data:null,error:res.error};
     const rows=res.data||[];
