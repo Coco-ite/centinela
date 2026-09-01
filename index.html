@@ -371,7 +371,7 @@ function reportWeekLabel(off){
 
 let state={session:null,view:"resumen",selected:null,weekOffset:0,reportOffset:0,filter:"todos",search:"",
            players:[],schedules:[],snaps:[],loading:true,addMsg:null,lastSync:null,
-           editing:null,mode:"admin",playerLoggedIn:false};
+           editing:null,mode:"admin",playerLoggedIn:false,playerPin:null};
 
 async function loadAll(){
   state.loading=true;render();
@@ -552,18 +552,32 @@ async function doPlayerLogin(){
   if(!pin){box.textContent=t("playerPinErr");return;}
   const res=await sb.rpc("player_login",{p_pin:pin});
   if(res.error||!res.data){box.textContent=t("playerPinErr");return;}
-  const d=res.data;
-  state.players=[{id:d.player.id,friendly_name:d.player.friendly_name,account_name:d.player.account_name,
-    timezone:d.player.timezone,tz_offset:d.player.tz_offset,week_start_day:d.player.week_start_day,active:true}];
-  state.schedules=(d.schedules||[]).map(s=>({player_id:d.player.id,week_start_day:s.week_start_day,effective_from:s.effective_from}));
-  state.snaps=(d.snapshots||[]).map(s=>({player_id:d.player.id,captured_at:s.captured_at,age_seconds:s.age_seconds}));
+  applyPlayerLoginData(res.data);
+  state.playerPin=pin;
   state.weekOffset=0;
   state.playerLoggedIn=true;
   render();
 }
 
+function applyPlayerLoginData(d){
+  state.players=[{id:d.player.id,friendly_name:d.player.friendly_name,account_name:d.player.account_name,
+    timezone:d.player.timezone,tz_offset:d.player.tz_offset,week_start_day:d.player.week_start_day,active:true}];
+  state.schedules=(d.schedules||[]).map(s=>({player_id:d.player.id,week_start_day:s.week_start_day,effective_from:s.effective_from}));
+  state.snaps=(d.snapshots||[]).map(s=>({player_id:d.player.id,captured_at:s.captured_at,age_seconds:s.age_seconds}));
+}
+
+async function refreshPlayerData(){
+  if(!state.playerPin)return;
+  state.loading=true;render();
+  const res=await sb.rpc("player_login",{p_pin:state.playerPin});
+  state.loading=false;
+  if(res.error||!res.data){playerLogout();return;}
+  applyPlayerLoginData(res.data);
+  render();
+}
+
 function playerLogout(){
-  state.mode="admin";state.playerLoggedIn=false;state.players=[];state.schedules=[];state.snaps=[];state.weekOffset=0;
+  state.mode="admin";state.playerLoggedIn=false;state.players=[];state.schedules=[];state.snaps=[];state.weekOffset=0;state.playerPin=null;
   render();
 }
 
@@ -575,7 +589,7 @@ function playerSelfView(){
   const trend=weeklyTrend(p,6),streak=currentStreak(p),th=totalHours(p);
   return'<div class="wrap" style="max-width:640px">'+
     '<div class="top">'+LOGO+'<div><div class="eyebrow">Centinela</div><h1>'+esc(t("playerWelcome",{name:p.friendly_name}))+'</h1></div>'+
-    '<div class="userbar">'+langToggle()+'<button class="btn ghost sm" onclick="playerLogout()">'+t("btnLogout")+'</button></div></div>'+
+    '<div class="userbar">'+langToggle()+'<button class="btn ghost sm" onclick="refreshPlayerData()">'+t("btnUpdate")+'</button><button class="btn ghost sm" onclick="playerLogout()">'+t("btnLogout")+'</button></div></div>'+
     '<div class="card"><div class="dhead"><div><div class="dmeta">'+esc(p.account_name||"—")+' · '+esc(tzLabel(playerTZ(p)))+' · '+t("laborales")+' '+workLabel+'</div></div>'+pillFor(w.level)+'</div></div>'+
     '<div class="weeknav"><button class="btn ghost sm" onclick="prevWeek()">'+t("weekPrev")+'</button>'+
     '<span class="rng">'+range+(state.weekOffset===0?" · "+t("thisWeek"):"")+'</span>'+
