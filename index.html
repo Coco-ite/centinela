@@ -373,13 +373,26 @@ let state={session:null,view:"resumen",selected:null,weekOffset:0,reportOffset:0
            players:[],schedules:[],snaps:[],loading:true,addMsg:null,lastSync:null,
            editing:null,mode:"admin",playerLoggedIn:false,playerPin:null};
 
+async function fetchAllSnapshots(since){
+  const pageSize=10000;let from=0,all=[];
+  while(true){
+    const res=await sb.from("snapshots").select("player_id,captured_at,age_seconds")
+      .gte("captured_at",since).order("captured_at").range(from,from+pageSize-1);
+    if(res.error)return{data:null,error:res.error};
+    const rows=res.data||[];
+    all=all.concat(rows);
+    if(rows.length<pageSize)break;
+    from+=pageSize;
+  }
+  return{data:all,error:null};
+}
 async function loadAll(){
   state.loading=true;render();
   const since=new Date(Date.now()-70*864e5).toISOString();
   const[pr,sc,sn]=await Promise.all([
     sb.from("players").select("*").order("friendly_name"),
     sb.from("schedules").select("*"),
-    sb.from("snapshots").select("player_id,captured_at,age_seconds").gte("captured_at",since)
+    fetchAllSnapshots(since)
   ]);
   state.players=pr.data||[];state.schedules=sc.data||[];state.snaps=sn.data||[];
   state.loading=false;state.lastSync=new Date();render();
