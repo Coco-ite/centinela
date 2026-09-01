@@ -128,7 +128,7 @@ const I18N={
     back:"← Volver al resumen",laborales:"laborales",
     weekPrev:"← Anterior",weekNext:"Siguiente →",thisWeek:"esta semana",
     minutesPerDay:"Minutos por día",
-    chartNote:"La línea punteada marca la meta de 1 hora. Los cuadros turquesa son días con 50–59 minutos: cerca de la meta, aunque no cuentan como cumplidos. Los días de descanso no exigen tiempo.",
+    chartNote:"La línea punteada marca la meta de {goal}. Los cuadros turquesa son días con {almostRange}: cerca de la meta, aunque no cuentan como cumplidos. Los días de descanso no exigen tiempo.",
     legendTitle:"Cómo leer los colores",
     legendOk:"Cumplió (60+ min)",
     legendAlmost:"Cerca de la meta (50–59 min)",
@@ -199,7 +199,7 @@ const I18N={
     back:"← Back to overview",laborales:"workdays",
     weekPrev:"← Previous",weekNext:"Next →",thisWeek:"this week",
     minutesPerDay:"Minutes per day",
-    chartNote:"The dashed line marks the 1-hour goal. Teal squares are days with 50–59 minutes: close to the goal, even though they don't count as met. Rest days don't require any time.",
+    chartNote:"The dashed line marks the {goal} goal. Teal squares are days with {almostRange}: close to the goal, even though they don't count as met. Rest days don't require any time.",
     legendTitle:"How to read the colors",
     legendOk:"Met (60+ min)",
     legendAlmost:"Close to goal (50–59 min)",
@@ -321,15 +321,16 @@ function dayAges(p){
 }
 function endAge(da,s){let r=null;for(const d of da.dates){if(d<=s)r=da.byDate[d];else break;}return r;}
 function minutesFor(da,s){const e=endAge(da,s),pv=endAge(da,addDays(s,-1));if(e==null||pv==null)return{min:null,partial:true};return{min:Math.max(0,(e-pv)/60),partial:false};}
+function goalMinutes(p){return p&&p.daily_goal_minutes>0?p.daily_goal_minutes:60;}
 function statusFor(p,da,s){
-  const tz=playerTZ(p),ws=wsForPlayer(p,s),today=todayLocal(tz),working=isWorking(s,ws);
+  const tz=playerTZ(p),ws=wsForPlayer(p,s),today=todayLocal(tz),working=isWorking(s,ws),goal=goalMinutes(p),almost=Math.max(0,goal-10);
   if(s>today)return{k:"next",min:null,working};
   const r=minutesFor(da,s);
   if(!working)return{k:"rest",min:r.min,working};
   if(r.partial)return{k:"part",min:null,working};
-  if(r.min>=60)return{k:"ok",min:r.min,working};
+  if(r.min>=goal)return{k:"ok",min:r.min,working};
   if(s===today)return{k:"cur",min:r.min,working};
-  if(r.min>=50)return{k:"almost",min:r.min,working};
+  if(r.min>=almost)return{k:"almost",min:r.min,working};
   return{k:"no",min:r.min,working};
 }
 function weekData(p,off){
@@ -463,11 +464,12 @@ function reportNextWeek(){if(state.reportOffset<0){state.reportOffset++;render()
 function setFilter(f){state.filter=f;render();}
 function setSearch(val){state.search=val;render();const el=document.getElementById("searchbox");if(el){el.focus();el.setSelectionRange(val.length,val.length);}}
 
-function minutesChart(days){
+function minutesChart(days,goal){
+  goal=goal||60;
   const W=720,H=215,pL=10,pR=10,pT=24,pB=36,n=days.length;
   const iW=W-pL-pR,iH=H-pT-pB,slot=iW/n,bW=Math.min(48,slot*0.5);
-  let mx=90;days.forEach(d=>{if(d.st.min&&d.st.min>mx)mx=d.st.min;});const sMax=Math.ceil(mx/30)*30;
-  const y=v=>pT+iH-(v/sMax*iH),gY=y(60);let g="";
+  let mx=Math.max(90,goal*1.5);days.forEach(d=>{if(d.st.min&&d.st.min>mx)mx=d.st.min;});const sMax=Math.ceil(mx/30)*30;
+  const y=v=>pT+iH-(v/sMax*iH),gY=y(goal);let g="";
   days.forEach((d,i)=>{
     const cx=pL+slot*i+slot/2,m=d.st.min;
     const col=d.st.k==="ok"?"var(--emerald)":d.st.k==="no"?"var(--brick)":d.st.k==="almost"?"var(--almost)":d.st.k==="cur"?"var(--amber)":(d.st.working?"var(--line)":"var(--muted)");
@@ -482,7 +484,7 @@ function minutesChart(days){
     g+='<text x="'+cx+'" y="'+(H-4)+'" text-anchor="middle" font-size="9" fill="var(--soft)">'+ddmm(d.date)+'</text>';
   });
   g+='<line x1="'+pL+'" y1="'+gY+'" x2="'+(W-pR)+'" y2="'+gY+'" stroke="var(--copper)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".7"/>';
-  g+='<text x="'+(W-pR)+'" y="'+(gY-4)+'" text-anchor="end" font-size="9" fill="var(--copper)">'+(lang==="en"?"1h goal":"meta 1 h")+'</text>';
+  g+='<text x="'+(W-pR)+'" y="'+(gY-4)+'" text-anchor="end" font-size="9" fill="var(--copper)">'+(lang==="en"?"goal "+fmt(goal):"meta "+fmt(goal))+'</text>';
   return'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto" font-family="Hanken Grotesk">'+g+'</svg>';
 }
 function trendChart(weeks){
@@ -578,8 +580,8 @@ function playerSelfView(){
     '<div class="weeknav"><button class="btn ghost sm" onclick="prevWeek()">'+t("weekPrev")+'</button>'+
     '<span class="rng">'+range+(state.weekOffset===0?" · "+t("thisWeek"):"")+'</span>'+
     '<button class="btn ghost sm" onclick="nextWeek()" '+(state.weekOffset>=0?"disabled":"")+'>'+t("weekNext")+'</button></div>'+
-    '<div class="card"><div class="ctitle">'+t("minutesPerDay")+'</div>'+minutesChart(w.days)+
-    '<p class="note">'+t("chartNote")+'</p></div>'+
+    '<div class="card"><div class="ctitle">'+t("minutesPerDay")+'</div>'+minutesChart(w.days,goalMinutes(p))+
+    '<p class="note">'+t("chartNote",{goal:fmt(goalMinutes(p)),almostRange:(Math.max(0,goalMinutes(p)-10))+'–'+(goalMinutes(p)-1)+' min'})+'</p></div>'+
     '<div class="card"><div class="ctitle">'+t("weeklyCompliance")+'</div>'+trendChart(trend)+'</div>'+
     '<div class="stats">'+
     '<div class="stat"><div class="lab">'+t("statThisWeek")+'</div><div class="val">'+w.met+'/5</div></div>'+
@@ -648,8 +650,8 @@ function detalleView(){
     '<div class="weeknav"><button class="btn ghost sm" onclick="prevWeek()">'+t("weekPrev")+'</button>'+
     '<span class="rng">'+range+(state.weekOffset===0?" · "+t("thisWeek"):"")+'</span>'+
     '<button class="btn ghost sm" onclick="nextWeek()" '+(state.weekOffset>=0?"disabled":"")+'>'+t("weekNext")+'</button></div>'+
-    '<div class="card"><div class="ctitle">'+t("minutesPerDay")+'</div>'+minutesChart(w.days)+
-    '<p class="note">'+t("chartNote")+'</p></div>'+
+    '<div class="card"><div class="ctitle">'+t("minutesPerDay")+'</div>'+minutesChart(w.days,goalMinutes(p))+
+    '<p class="note">'+t("chartNote",{goal:fmt(goalMinutes(p)),almostRange:(Math.max(0,goalMinutes(p)-10))+'–'+(goalMinutes(p)-1)+' min'})+'</p></div>'+
     '<div class="card"><div class="ctitle">'+t("weeklyCompliance")+'</div>'+trendChart(trend)+'</div>'+
     '<div class="stats">'+
     '<div class="stat"><div class="lab">'+t("statThisWeek")+'</div><div class="val">'+w.met+'/5</div></div>'+
