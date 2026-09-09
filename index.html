@@ -574,7 +574,8 @@ async function doPlayerLogin(){
 
 function applyPlayerLoginData(d){
   state.players=[{id:d.player.id,friendly_name:d.player.friendly_name,account_name:d.player.account_name,
-    timezone:d.player.timezone,tz_offset:d.player.tz_offset,week_start_day:d.player.week_start_day,active:true}];
+    timezone:d.player.timezone,tz_offset:d.player.tz_offset,week_start_day:d.player.week_start_day,
+    daily_goal_minutes:d.player.daily_goal_minutes,active:true}];
   state.schedules=(d.schedules||[]).map(s=>({player_id:d.player.id,week_start_day:s.week_start_day,effective_from:s.effective_from}));
   state.snaps=(d.snapshots||[]).map(s=>({player_id:d.player.id,captured_at:s.captured_at,age_seconds:s.age_seconds}));
 }
