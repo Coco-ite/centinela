@@ -1,7 +1,5 @@
 name: Grabar tiempo de juego
 on:
-  schedule:
-    - cron: "*/30 * * * *"
   workflow_dispatch:
 jobs:
   record:
